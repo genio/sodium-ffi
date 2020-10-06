@@ -13,20 +13,14 @@ use FFI::Platypus;
 use Path::Tiny qw(path);
 use Sub::Util qw(set_subname);
 
-my $ffi;
-BEGIN {
-    $ffi = FFI::Platypus->new(api => 1);
-    $ffi->lib(Alien::Sodium->dynamic_libs);
-   # $ffi->bundle();
-}
-
-# Protect subclasses using AUTOLOAD
-sub DESTROY { }
 our @EXPORT_OK = qw();
 
-# All of these functions were shipped with libuv v1.0 and don't
-# need to be gated by version.
+my $ffi = FFI::Platypus->new(api => 1);
+$ffi->lib(Alien::Sodium->dynamic_libs);
 $ffi->attach('sodium_version_string' => [] => 'string');
+$ffi->bundle();
+
+# All of these functions don't need to be gated by version.
 $ffi->attach('sodium_library_version_major' => [] => 'int');
 $ffi->attach('sodium_library_version_minor' => [] => 'int');
 $ffi->attach('sodium_library_minimal' => [] => 'int');
@@ -55,7 +49,6 @@ foreach my $func (keys %maybe_function) {
     }
 }
 
-
 sub _version_or_better {
     my ($maj, $min, $pat) = @_;
     $maj //= 0;
@@ -68,18 +61,26 @@ sub _version_or_better {
     }
     # if no number was passed in, then the current version is higher
     return 1 unless ($maj || $min || $pat);
-
-
-    return 0 if Sodium::FFI->UV_VERSION_MAJOR < $maj; # full version behind of requested
-    return 1 if Sodium::FFI->UV_VERSION_MAJOR > $maj; # full version ahead of requested
-    # now we should be matching major versions
-    return 1 unless $min; # if we were only given major, move on
-    return 0 if Sodium::FFI->UV_VERSION_MINOR < $min; # same major, lower minor
-    return 1 if Sodium::FFI->UV_VERSION_MINOR > $min; # same major, higher minor
-    # now we should be matching major and minor, check patch
-    return 1 unless $pat; # move on if we were given maj, min only
-    return 0 if Sodium::FFI->UV_VERSION_PATCH < $pat;
-    return 1;
 }
 
 1;
+
+__END__
+
+
+=head1 NAME
+
+Sodium::FFI - FFI implementation of libsodium
+
+=head1 SYNOPSIS
+
+  use strict;
+
+=head1 COPYRIGHT
+
+ Copyright 2020 Chase Whitener. All rights reserved.
+
+This library is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+=cut

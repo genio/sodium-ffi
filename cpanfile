@@ -4,7 +4,7 @@ on 'runtime' => sub {
     requires 'feature';
     requires 'utf8';
     requires 'Alien::Base::Wrapper';
-    requires 'Alien::libuv' => '1.013';
+    requires 'Alien::Sodium' => '2.000';
     requires 'Carp';
     requires 'Cwd';
     requires 'Data::Dumper';
