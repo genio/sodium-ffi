@@ -85,6 +85,17 @@
       }
    },
    "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/genio/sodium-ffi/issues"
+      },
+      "homepage" : "https://github.com/genio/sodium-ffi",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/genio/sodium-ffi.git",
+         "web" : "https://github.com/genio/sodium-ffi"
+      }
+   },
    "version" : "0.001",
    "x_contributors" : [
       "Chase Whitener <cwhitener@gmail.com>"

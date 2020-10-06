@@ -15,10 +15,12 @@ use Sub::Util qw(set_subname);
 
 our @EXPORT_OK = qw();
 
-my $ffi = FFI::Platypus->new(api => 1);
-$ffi->lib(Alien::Sodium->dynamic_libs);
+our $ffi;
+BEGIN {
+    $ffi = FFI::Platypus->new(api => 1, lib => Alien::Sodium->dynamic_libs);
+    $ffi->bundle();
+}
 $ffi->attach('sodium_version_string' => [] => 'string');
-$ffi->bundle();
 
 # All of these functions don't need to be gated by version.
 $ffi->attach('sodium_library_version_major' => [] => 'int');

@@ -21,3 +21,7 @@ on 'runtime' => sub {
 on 'test' => sub {
     requires 'Test::More' => '0.88';
 };
+
+on 'develop' => sub {
+    requires 'Dist::Zilla::Plugin::FFI::Build';
+};
