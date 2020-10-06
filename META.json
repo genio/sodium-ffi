@@ -3,7 +3,7 @@
    "author" : [
       "Chase Whitener <capoeirab@cpan.org>"
    ],
-   "dynamic_config" : 0,
+   "dynamic_config" : 1,
    "generated_by" : "Dist::Zilla version 6.014, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
@@ -27,11 +27,13 @@
       "configure" : {
          "requires" : {
             "ExtUtils::MakeMaker" : "0",
+            "FFI::Build::MM" : "0.83",
             "perl" : "5.008"
          }
       },
       "develop" : {
          "requires" : {
+            "Dist::Zilla::Plugin::FFI::Build" : "0",
             "File::Spec" : "0",
             "IO::Handle" : "0",
             "IPC::Open3" : "0",

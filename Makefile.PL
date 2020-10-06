@@ -11,7 +11,8 @@ my %WriteMakefileArgs = (
   "ABSTRACT" => "FFI implementation of libsodium",
   "AUTHOR" => "Chase Whitener <capoeirab\@cpan.org>",
   "CONFIGURE_REQUIRES" => {
-    "ExtUtils::MakeMaker" => 0
+    "ExtUtils::MakeMaker" => 0,
+    "FFI::Build::MM" => "0.83"
   },
   "DISTNAME" => "Sodium-FFI",
   "LICENSE" => "perl",
@@ -68,6 +69,12 @@ my %FallbackPrereqs = (
   "warnings" => 0
 );
 
+# BEGIN code inserted by Dist::Zilla::Plugin::FFI::Build
+use FFI::Build::MM 0.83;
+my $fbmm = FFI::Build::MM->new;
+%WriteMakefileArgs = $fbmm->mm_args(%WriteMakefileArgs);
+# END code inserted by Dist::Zilla::Plugin::FFI::Build
+
 unless ( eval { ExtUtils::MakeMaker->VERSION('6.63_03') } ) {
   delete $WriteMakefileArgs{TEST_REQUIRES};
   delete $WriteMakefileArgs{BUILD_REQUIRES};
@@ -78,3 +85,24 @@ delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
   unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
 
 WriteMakefile(%WriteMakefileArgs);
+
+# BEGIN code inserted by Dist::Zilla::Plugin::FFI::Build
+BEGIN {
+  # append to any existing postamble.
+  if(my $old = MY->can('postamble'))
+  {
+    no warnings 'redefine';
+    *MY::postamble = sub {
+      $old->(@_) .
+      "\n" .
+      $fbmm->mm_postamble;
+    };
+  }
+  else
+  {
+    *MY::postamble = sub {
+      $fbmm->mm_postamble;
+    };
+  }
+}
+# END code inserted by Dist::Zilla::Plugin::FFI::Build

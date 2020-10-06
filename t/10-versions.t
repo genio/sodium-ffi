@@ -19,4 +19,21 @@ ok($ver_string, "constant version string: $ver_string");
 ok($ver_major, "constant version major: $ver_major");
 ok($ver_minor, "constant version minor: $ver_minor");
 
+# check the minimal function
+my $error;
+my $min;
+{
+    local $@;
+    $error = $@ || 'Error' unless eval {
+        $min = Sodium::FFI::sodium_library_minimal();
+        1;
+    };
+}
+if ($error) {
+    ok("sodium_library_minimal is not defined in this version.");
+}
+else {
+    ok($min == 0 || $min == 1, "sodium_library_minimal: $min");
+}
+
 done_testing;

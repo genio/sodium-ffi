@@ -68,6 +68,20 @@ sub _version_or_better {
     }
     # if no number was passed in, then the current version is higher
     return 1 unless ($maj || $min || $pat);
+
+    my $version_string = Sodium::FFI::sodium_version_string();
+    croak("No version string") unless $version_string;
+    my ($smaj, $smin, $spatch) = split(/\./, $version_string);
+    return 0 if $smaj < $maj; # full version behind of requested
+    return 1 if $smaj > $maj; # full version ahead of requested
+    # now we should be matching major versions
+    return 1 unless $min; # if we were only given major, move on
+    return 0 if $smin < $min; # same major, lower minor
+    return 1 if $smaj > $min; # same major, higher minor
+    # now we should be matching major and minor, check patch
+    return 1 unless $pat; # move on if we were given maj, min only
+    return 0 if $spatch < $pat;
+    return 1;
 }
 
 1;
