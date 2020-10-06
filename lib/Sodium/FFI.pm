@@ -25,12 +25,17 @@ $ffi->attach('sodium_version_string' => [] => 'string');
 # All of these functions don't need to be gated by version.
 $ffi->attach('sodium_library_version_major' => [] => 'int');
 $ffi->attach('sodium_library_version_minor' => [] => 'int');
-$ffi->attach('sodium_library_minimal' => [] => 'int');
 
 our %function = (
 );
 
 our %maybe_function = (
+    'sodium_library_minimal' => {
+        added => [1,0,12],
+        # uint64_t uv_get_constrained_memory(void)
+        ffi => [[], 'int'],
+        fallback => sub { croak("sodium_library_minimal not implemented until libsodium v1.0.12"); },
+    },
 );
 
 foreach my $func (keys %function) {
