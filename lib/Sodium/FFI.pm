@@ -27,6 +27,55 @@ $ffi->attach('sodium_library_version_major' => [] => 'int');
 $ffi->attach('sodium_library_version_minor' => [] => 'int');
 
 our %function = (
+    # char *
+    # sodium_bin2hex(char *const hex, const size_t hex_maxlen,
+    # const unsigned char *const bin, const size_t bin_len)
+    'sodium_bin2hex' => [
+        ['string', 'size_t', 'string', 'size_t'] => 'string',
+        sub {
+            my ($xsub, $bin_string) = @_;
+            $bin_string //= '';
+            my $bin_len = length($bin_string);
+            my $hex_max = $bin_len * 2;
+
+            my $buffer = "\0" x ($hex_max + 1);
+            $xsub->($buffer, $hex_max, $bin_string, $bin_len);
+            return substr($buffer, 0, $hex_max);
+        }
+    ],
+
+    # int sodium_hex2bin(
+    #    unsigned char *const bin, const size_t bin_maxlen,
+    #    const char *const hex, const size_t hex_len,
+    #    const char *const ignore, size_t *const bin_len, const char **const hex_end)
+    'sodium_hex2bin' => [
+        ['string', 'size_t', 'string', 'size_t', 'string', 'size_t *', 'string *'] => 'int',
+        sub {
+            my ($xsub, $hex_string, %params) = @_;
+            $hex_string //= '';
+            my $hex_len = length($hex_string);
+
+            # these two are mostly always void/undef
+            my $ignore = $params{ignore};
+            my $hex_end = $params{hex_end};
+
+            my $bin_max_len = $params{max_len} // 0;
+            if ($bin_max_len <= 0) {
+                $bin_max_len = $hex_len;
+                $bin_max_len = int($hex_len / 2) unless $ignore;
+            }
+            my $buffer = "\0" x ($hex_len + 1);
+            my $bin_len = 0;
+
+            my $ret = $xsub->($buffer, $hex_len, $hex_string, $hex_len, $ignore, \$bin_len, \$hex_end);
+            unless ($ret == 0) {
+                croak("sodium_hex2bin failed with: $ret");
+            }
+
+            return substr($buffer, 0, $bin_max_len) if $bin_max_len < $bin_len;
+            return substr($buffer, 0, $bin_len);
+        }
+    ],
 );
 
 our %maybe_function = (
@@ -40,6 +89,7 @@ our %maybe_function = (
 
 foreach my $func (keys %function) {
     $ffi->attach($func, @{$function{$func}});
+    push @EXPORT_OK, $func;
 }
 
 foreach my $func (keys %maybe_function) {
@@ -54,6 +104,7 @@ foreach my $func (keys %maybe_function) {
         my $pkg = __PACKAGE__;
         *{"${pkg}::$func"} = set_subname("${pkg}::$func", $href->{fallback});
     }
+    push @EXPORT_OK, $func;
 }
 
 sub _version_or_better {
