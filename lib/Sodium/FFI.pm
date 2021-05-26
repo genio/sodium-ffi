@@ -34,12 +34,12 @@ our %function = (
         ['string', 'size_t', 'string', 'size_t'] => 'string',
         sub {
             my ($xsub, $bin_string) = @_;
-            $bin_string //= '';
+            return unless $bin_string;
             my $bin_len = length($bin_string);
             my $hex_max = $bin_len * 2;
 
             my $buffer = "\0" x ($hex_max + 1);
-            $xsub->($buffer, $hex_max, $bin_string, $bin_len);
+            $xsub->($buffer, $hex_max + 1, $bin_string, $bin_len);
             return substr($buffer, 0, $hex_max);
         }
     ],
@@ -89,7 +89,7 @@ our %maybe_function = (
 
 foreach my $func (keys %function) {
     $ffi->attach($func, @{$function{$func}});
-    push @EXPORT_OK, $func;
+    push(@EXPORT_OK, $func) unless ref($func);
 }
 
 foreach my $func (keys %maybe_function) {

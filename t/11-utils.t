@@ -19,21 +19,21 @@ $readable .= sprintf('%02x', ord($_)) for split //, $bin;
 is($readable, 'cafe6942', "hex2bin: maxlen 4, ignore ': ': readable; Cafe : 6942 = cafe6942");
 
 # hex2bin - bin2hex round trip
-# {
-#     my $hex = '414243';
-#     my $bin = sodium_hex2bin($hex);
-#     is($bin, 'ABC', 'round-trip: first leg ok');
-#     my $new_hex;
-#     my $error;
-#     {
-#         local $@;
-#         $error = $@ || 'Error' unless eval {
-#             $new_hex = sodium_bin2hex($bin);
-#             1;
-#         };
-#     }
-#     is($new_hex, $hex, 'round-trip: second leg ok. YAY');
-#     ok(!$error, 'no errors on the round trip');
-# }
+{
+    my $hex = '414243';
+    my $bin = sodium_hex2bin($hex);
+    is($bin, 'ABC', 'round-trip: first leg ok');
+    my $new_hex;
+    my $error;
+    {
+        local $@;
+        $error = $@ || 'Error' unless eval {
+            $new_hex = sodium_bin2hex($bin);
+            1;
+        };
+    }
+    is($new_hex, $hex, 'round-trip: second leg ok. YAY');
+    ok(!$error, 'no errors on the round trip');
+}
 
 done_testing;
