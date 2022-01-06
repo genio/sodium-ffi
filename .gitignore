@@ -27,3 +27,6 @@ xx*
 lib/*.c
 lib/UV/*.c
 .tmp/
+fbx.json
+foo.pl
+*.phpt

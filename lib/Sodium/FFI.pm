@@ -27,9 +27,21 @@ $ffi->attach('sodium_library_version_major' => [] => 'int');
 $ffi->attach('sodium_library_version_minor' => [] => 'int');
 
 our %function = (
+    # void
+    # sodium_add(unsigned char *a, const unsigned char *b, const size_t len)
+    'sodium_add' => [
+        ['string', 'string', 'size_t'] => 'void',
+        sub {
+            my ($xsub, $bin_string1, $bin_string2, $len) = @_;
+            return unless $bin_string1 && $bin_string2;
+            $len //= length($bin_string1);
+            $xsub->($bin_string1, $bin_string2, $len);
+        }
+    ],
+
     # char *
     # sodium_bin2hex(char *const hex, const size_t hex_maxlen,
-    # const unsigned char *const bin, const size_t bin_len)
+    #   const unsigned char *const bin, const size_t bin_len)
     'sodium_bin2hex' => [
         ['string', 'size_t', 'string', 'size_t'] => 'string',
         sub {
@@ -44,7 +56,8 @@ our %function = (
         }
     ],
 
-    # int sodium_hex2bin(
+    # int
+    # sodium_hex2bin(
     #    unsigned char *const bin, const size_t bin_maxlen,
     #    const char *const hex, const size_t hex_len,
     #    const char *const ignore, size_t *const bin_len, const char **const hex_end)
@@ -76,14 +89,115 @@ our %function = (
             return substr($buffer, 0, $bin_len);
         }
     ],
+
+    # void
+    # sodium_increment(unsigned char *n, const size_t nlen)
+    'sodium_increment' => [
+        ['string', 'size_t'] => 'void',
+        sub {
+            my ($xsub, $bin_string, $len) = @_;
+            return unless $bin_string;
+            $len //= length($bin_string);
+            $xsub->($bin_string, $len);
+        }
+    ],
+
 );
 
 our %maybe_function = (
+    # int
+    # sodium_compare(const unsigned char *b1_,
+    #   const unsigned char *b2_, size_t len)
+    'sodium_compare' => {
+        added => [1,0,4],
+        ffi => [
+            ['string', 'string', 'size_t'] => 'int',
+            sub {
+                my ($xsub, $bin_string1, $bin_string2, $len) = @_;
+                return unless $bin_string1 && $bin_string2;
+                $len //= length($bin_string1);
+                my $int = $xsub->($bin_string1, $bin_string2, $len);
+                return $int;
+            }
+        ],
+        fallback => sub { croak("sodium_compare not implemented until libsodium v1.0.4"); },
+    },
+
+    # int
+    # sodium_library_minimal(void)
     'sodium_library_minimal' => {
         added => [1,0,12],
-        # uint64_t uv_get_constrained_memory(void)
         ffi => [[], 'int'],
         fallback => sub { croak("sodium_library_minimal not implemented until libsodium v1.0.12"); },
+    },
+
+    # int
+    # sodium_pad(size_t *padded_buflen_p, unsigned char *buf,
+    # size_t unpadded_buflen, size_t blocksize, size_t max_buflen)
+    'sodium_pad' => {
+        added => [1,0,14],
+        ffi => [
+            ['size_t', 'string', 'size_t', 'size_t', 'size_t'] => 'int',
+            sub {
+                my ($xsub, $unpadded, $block_size) = @_;
+                my $SIZE_MAX = Sodium::FFI::SIZE_MAX;
+                my $unpadded_len = length($unpadded);
+                $block_size //= 16;
+                $block_size = 16 if $block_size < 0;
+
+                my $xpadlen = $block_size - 1;
+                if (($block_size & ($block_size - 1)) == 0) {
+                    $xpadlen -= $unpadded_len & ($block_size - 1);
+                } else {
+                    $xpadlen -= $unpadded_len % $block_size;
+                }
+                if ($SIZE_MAX - $unpadded_len <= $xpadlen) {
+                    croak("Input is too large.");
+                }
+
+                my $xpadded_len = $unpadded_len + $xpadlen;
+                my $padded = "\0" x ($xpadded_len + 1);
+                if ($unpadded_len > 0) {
+                    my $st = 1;
+                    my $i = 0;
+                    my $k = $unpadded_len;
+                    for my $j (0..$xpadded_len) {
+                        substr($padded, $j, 1) = substr($unpadded, $i, 1);
+                        $k -= $st;
+                        $st = (~((((($k >> 48) | ($k >> 32) | ($k >> 16) | $k) & 0xffff) - 1) >> 16)) & 1;
+                        $i += $st;
+                    }
+                }
+                my $int = $xsub->(undef, $padded, $unpadded_len, $block_size, $xpadded_len + 1);
+                return $padded;
+            }
+        ],
+        fallback => sub { croak("sodium_pad not implemented until libsodium v1.0.14"); },
+    },
+
+    # int
+    # sodium_unpad(size_t *unpadded_buflen_p, const unsigned char *buf,
+    # size_t padded_buflen, size_t blocksize)
+    'sodium_unpad' => {
+        added => [1,0,14],
+        ffi => [
+            ['size_t*', 'string', 'size_t', 'size_t'] => 'int',
+            sub {
+                my ($xsub, $padded, $block_size) = @_;
+                $block_size //= 16;
+                $block_size = 16 if $block_size < 0;
+
+                my $SIZE_MAX = Sodium::FFI::SIZE_MAX;
+                my $padded_len = length($padded);
+                if ($padded_len < $block_size) {
+                    croak("Invalid padding.");
+                }
+                my $unpadded_len = 0;
+                my $int = $xsub->(\$unpadded_len, $padded, $padded_len, $block_size);
+                return substr($padded, 0, $unpadded_len);
+            }
+        ],
+        fallback => sub { croak("sodium_unpad not implemented until libsodium v1.0.14"); },
     },
 );
 
