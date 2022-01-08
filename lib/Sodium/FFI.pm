@@ -35,7 +35,9 @@ our %function = (
             my ($xsub, $bin_string1, $bin_string2, $len) = @_;
             return unless $bin_string1 && $bin_string2;
             $len //= length($bin_string1);
-            $xsub->($bin_string1, $bin_string2, $len);
+            my $copy = substr($bin_string1, 0);
+            $xsub->($copy, $bin_string2, $len);
+            return $copy;
         }
     ],
 
@@ -98,7 +100,9 @@ our %function = (
             my ($xsub, $bin_string, $len) = @_;
             return unless $bin_string;
             $len //= length($bin_string);
-            $xsub->($bin_string, $len);
+            my $copy = substr($bin_string, 0);
+            $xsub->($copy, $len);
+            return $copy;
         }
     ],
 
@@ -261,6 +265,117 @@ Sodium::FFI - FFI implementation of libsodium
 =head1 SYNOPSIS
 
   use strict;
+  use warnings;
+  use v5.34;
+
+  use Sodium::FFI ();
+
+  my $text = "1234";
+  my $padded = Sodium::FFI::pad($text, 16);
+  say Sodium::FFI::unpad($padded);
+
+=head1 DESCRIPTION
+
+L<Sodium::FFI> is a set of Perl bindings for the L<LibSodium|https://doc.libsodium.org/>
+C library. These bindings have been created using FFI via L<FFI::Platypus> to make
+building and maintaining the bindings easier than was done via L<Crypt::NaCl::Sodium>.
+While we also intend to fixup L<Crypt::NaCl::Sodium> so that it can use newer versions
+of LibSodium, the FFI method is faster to build and release.
+
+=head1 Utility/Helper Functions
+
+LibSodium provides a few L<Utility/Helper Functions|https://doc.libsodium.org/helpers>
+to assist you in getting your data ready for encryption, decryption, or hashing.
+
+=head2 sodium_add
+
+    use Sodium::FFI qw(sodium_add);
+    my $left = "111";
+    $left = sodium_add($left, 111);
+    say $left; # bbb
+
+The L<sodium_add|https://doc.libsodium.org/helpers#adding-large-numbers>
+function adds 2 large numbers.
+
+=head2 sodium_bin2hex
+
+    use Sodium::FFI qw(sodium_bin2hex);
+    my $binary = "ABC";
+    my $hex = sodium_bin2hex($binary);
+    say $hex; # 414243
+
+The L<sodium_bin2hex|https://doc.libsodium.org/helpers#hexadecimal-encoding-decoding>
+function takes a binary string and turns it into a hex string.
+
+=head2 sodium_compare
+
+    use Sodium::FFI qw(sodium_compare);
+    say sodium_compare("\x01", "\x02"); # -1
+    say sodium_compare("\x02", "\x01"); # 1
+    say sodium_compare("\x01", "\x01"); # 0
+
+The L<sodium_compare|https://doc.libsodium.org/helpers#comparing-large-numbers>
+function compares two large numbers encoded in little endian format.
+Results in C<-1> when C<< $left < $right >>
+Results in C<0> when C<$left eq $right>
+Results in C<1> when C<< $left > $right >>
+
+=head2 sodium_hex2bin
+
+    use Sodium::FFI qw(sodium_hex2bin);
+    my $hex = "414243";
+    my $bin = sodium_hex2bin($hex);
+    say $bin; # ABC
+
+The L<sodium_hex2bin|https://doc.libsodium.org/helpers#hexadecimal-encoding-decoding>
+function takes a hex string and turns it into a binary string.
+
+=head2 sodium_increment
+
+    use Sodium::FFI qw(sodium_increment);
+    my $x = "\x01";
+    $x = sodium_increment($x); # "\x02";
+
+The L<sodium_increment|https://doc.libsodium.org/helpers#incrementing-large-numbers>
+function takes an arbitrarily long unsigned number and increments it.
+
+=head2 sodium_library_minimal
+
+    use Sodium::FFI qw(sodium_library_minimal);
+    say sodium_library_minimal; # 0 or 1
+
+The C<sodium_library_minimal> function lets you know if this is a minimal version.
+
+=head2 sodium_library_version_major
+
+    use Sodium::FFI qw(sodium_library_version_major);
+    say sodium_library_version_major; # 10
+
+The C<sodium_library_version_major> function returns the major version of the library.
+
+=head2 sodium_library_version_minor
+
+    use Sodium::FFI qw(sodium_library_version_minor);
+    say sodium_library_version_minor; # 3
+
+The C<sodium_library_version_minor> function returns the minor version of the library.
+
+=head2 sodium_pad
+
+    use Sodium::FFI qw(sodium_pad);
+    say sodium_pad; # 3
+
+The L<sodium_pad|https://doc.libsodium.org/padding> function adds
+padding data to a buffer in order to extend its total length to a
+multiple of blocksize.
+
+=head2 sodium_version_string
+
+    use Sodium::FFI qw(sodium_version_string);
+    say sodium_version_string; # 1.0.18
+
+The C<sodium_version_string> function returns the stringified version information
+for the version of LibSodium that you have installed.
 
 =head1 COPYRIGHT
 

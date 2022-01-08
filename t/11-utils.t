@@ -35,11 +35,17 @@ is($readable, 'cafe6942', "hex2bin: maxlen 4, ignore ': ': readable; Cafe : 6942
 # sodium_add, sodium_increment
 {
     my $left = "\xFF\xFF\x80\x01\x02\x03\x04\x05\x06\x07\x08";
-    sodium_increment($left);
+    is(sodium_bin2hex($left), 'ffff800102030405060708', 'bin2hex: Got the right answer');
+    $left = sodium_increment($left);
     is(sodium_bin2hex($left), '0000810102030405060708', 'increment, bin2hex: Got the right answer');
     my $right = "\x01\x02\x03\x04\x05\x06\x07\x08\xFA\xFB\xFC";
-    sodium_add($left, $right);
+    $left = sodium_add($left, $right);
     is(sodium_bin2hex($left), '0102840507090b0d000305', 'add, bin2hex: Got the right answer');
+    my $foo = 111;
+    is(sodium_add($foo, "111"), "bbb", 'add: non-lvalue test');
+    is($foo, 111, 'left side was unaltered');
+    $foo = sodium_add($foo, 111);
+    is($foo, 'bbb', 'sodium_add: right value');
 }
 
 # sodium_compare
@@ -48,9 +54,9 @@ SKIP: {
     my $v1 = "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F";
     my $v2 = "\x02\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F";
     is(sodium_compare($v1, $v2), -1, 'sodium_compare: v1 < v2');
-    sodium_increment($v1);
+    $v1 = sodium_increment($v1);
     is(sodium_compare($v1, $v2), 0, 'sodium_compare: increment sets v1 == v2');
-    sodium_increment($v1);
+    $v1 = sodium_increment($v1);
     is(sodium_compare($v1, $v2), 1, 'sodium_compare: increment sets v1 > v2');
 };
 
