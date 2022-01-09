@@ -57,7 +57,7 @@ say sodium_bin2base64("\377\000", $variant); # _wA
 ```
 
 The [sodium\_bin2base64](https://doc.libsodium.org/helpers#base64-encoding-decoding)
-function takes a binary string and turns it into a base63 encoded string.
+function takes a binary string and turns it into a base64 encoded string.
 
 ## sodium\_bin2hex
 
