@@ -42,6 +42,31 @@ our %function = (
         }
     ],
 
+    # int
+    # sodium_base642bin(
+    #   unsigned char * const bin, const size_t bin_maxlen,
+    #   const char * const b64, const size_t b64_len,
+    #   const char * const ignore, size_t * const bin_len,
+    #   const char ** const b64_end, const int variant);
+    'sodium_base642bin' => [
+        ['string', 'size_t', 'string', 'size_t', 'string', 'size_t*', 'string*', 'int'] => 'int',
+        sub {
+            my ($xsub, $b64, $variant) = @_;
+            my $b64_len = length($b64);
+            $variant //= Sodium::FFI::sodium_base64_VARIANT_ORIGINAL;
+
+            my $bin_max_len = $b64_len / 4 * 3 + 2;
+            my $bin = "\0" x $bin_max_len;
+            my $bin_real_len = 0;
+
+            my $ignore = undef;
+            my $end = undef;
+            $xsub->($bin, $bin_max_len, $b64, $b64_len, $ignore, \$bin_real_len, \$end, $variant);
+            # $bin =~ s/\0//g;
+            return substr($bin, 0, $bin_real_len);
+        }
+    ],
+
     # char *
     # sodium_bin2base64(char * const b64, const size_t b64_maxlen,
     #   const unsigned char * const bin, const size_t bin_len,
@@ -335,6 +360,22 @@ to assist you in getting your data ready for encryption, decryption, or hashing.
 
 The L<sodium_add|https://doc.libsodium.org/helpers#adding-large-numbers>
 function adds 2 large numbers.
+
+=head2 sodium_base642bin
+
+    use Sodium::FFI qw(sodium_base642bin);
+    say sodium_base642bin('/wA='); # \377\000
+    my $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL;
+    say sodium_base642bin('/wA=', $variant); # \377\000
+    $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
+    say sodium_base642bin('/wA', $variant); # \377\000
+    $variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE;
+    say sodium_base642bin('_wA=', $variant); # \377\000
+    $variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+    say sodium_base642bin('_wA', $variant); # \377\000
+
+The L<sodium_base642bin|https://doc.libsodium.org/helpers#base64-encoding-decoding>
+function takes a base64 encoded string and turns it back into a binary string.
 
 =head2 sodium_bin2base64
 

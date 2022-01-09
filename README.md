@@ -41,6 +41,24 @@ say $left; # bbb
 The [sodium\_add](https://doc.libsodium.org/helpers#adding-large-numbers)
 function adds 2 large numbers.
 
+## sodium\_base642bin
+
+```perl
+use Sodium::FFI qw(sodium_base642bin);
+say sodium_base642bin('/wA='); # \377\000
+my $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL;
+say sodium_base642bin('/wA=', $variant); # \377\000
+$variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
+say sodium_base642bin('/wA', $variant); # \377\000
+$variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE;
+say sodium_base642bin('_wA=', $variant); # \377\000
+$variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+say sodium_base642bin('_wA', $variant); # \377\000
+```
+
+The [sodium\_base642bin](https://doc.libsodium.org/helpers#base64-encoding-decoding)
+function takes a base64 encoded string and turns it back into a binary string.
+
 ## sodium\_bin2base64
 
 ```perl
