@@ -46,6 +46,8 @@ is($readable, 'cafe6942', "hex2bin: maxlen 4, ignore ': ': readable; Cafe : 6942
     is($foo, 111, 'left side was unaltered');
     $foo = sodium_add($foo, 111);
     is($foo, 'bbb', 'sodium_add: right value');
+    $foo = "\x01";
+    is(sodium_increment($foo), "\x02", 'sodium_increment: 01 -> 02');
 }
 
 # sodium_compare

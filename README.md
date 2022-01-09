@@ -122,12 +122,27 @@ The `sodium_library_version_minor` function returns the minor version of the lib
 
 ```perl
 use Sodium::FFI qw(sodium_pad);
-say sodium_pad; # 3
+my $bin_string = "\x01";
+my $block_size = 4;
+say sodium_pad($bin_string, $block_size); # 01800000
 ```
 
 The [sodium\_pad](https://doc.libsodium.org/padding) function adds
 padding data to a buffer in order to extend its total length to a
 multiple of blocksize.
+
+## sodium\_unpad
+
+```perl
+use Sodium::FFI qw(sodium_unpad);
+my $bin_string = "\x01\x80\x00\x00\x0";
+my $block_size = 4;
+say sodium_unpad($bin_string, $block_size); # 01
+```
+
+The [sodium\_unpad](https://doc.libsodium.org/padding) function
+computes the original, unpadded length of a message previously
+padded using `sodium_pad`.
 
 ## sodium\_version\_string
 
