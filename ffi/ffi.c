@@ -18,6 +18,12 @@ ffi_pl_bundle_constant(const char* package, ffi_platypus_constant_t* c)
     _sint(SODIUM_LIBRARY_MINIMAL);
     _sint(SODIUM_LIBRARY_VERSION_MAJOR);
     _sint(SODIUM_LIBRARY_VERSION_MINOR);
+
+    /* base_64 options */
+    _sint(sodium_base64_VARIANT_ORIGINAL);
+    _sint(sodium_base64_VARIANT_ORIGINAL_NO_PADDING);
+    _sint(sodium_base64_VARIANT_URLSAFE);
+    _sint(sodium_base64_VARIANT_URLSAFE_NO_PADDING);
 }
 
 void

@@ -20,11 +20,12 @@ BEGIN {
     $ffi = FFI::Platypus->new(api => 1, lib => Alien::Sodium->dynamic_libs);
     $ffi->bundle();
 }
-$ffi->attach('sodium_version_string' => [] => 'string');
-
 # All of these functions don't need to be gated by version.
+$ffi->attach('sodium_version_string' => [] => 'string');
 $ffi->attach('sodium_library_version_major' => [] => 'int');
 $ffi->attach('sodium_library_version_minor' => [] => 'int');
+
+$ffi->attach('sodium_base64_encoded_len' => ['size_t', 'int'] => 'size_t');
 
 our %function = (
     # void
@@ -38,6 +39,26 @@ our %function = (
             my $copy = substr($bin_string1, 0);
             $xsub->($copy, $bin_string2, $len);
             return $copy;
+        }
+    ],
+
+    # char *
+    # sodium_bin2base64(char * const b64, const size_t b64_maxlen,
+    #   const unsigned char * const bin, const size_t bin_len,
+    #   const int variant);
+    'sodium_bin2base64' => [
+        ['string', 'size_t', 'string', 'size_t', 'int'] => 'string',
+        sub {
+            my ($xsub, $bin, $variant) = @_;
+            my $bin_len = length($bin);
+            $variant //= Sodium::FFI::sodium_base64_VARIANT_ORIGINAL;
+
+            my $b64_len = Sodium::FFI::sodium_base64_encoded_len($bin_len, $variant);
+            my $b64 = "\0" x $b64_len;
+
+            $xsub->($b64, $b64_len, $bin, $bin_len, $variant);
+            $b64 =~ s/\0//g;
+            return $b64;
         }
     ],
 
@@ -179,6 +200,24 @@ our %maybe_function = (
         fallback => sub { croak("sodium_pad not implemented until libsodium v1.0.14"); },
     },
 
+    # void
+    # sodium_sub(unsigned char *a, const unsigned char *b, const size_t len);
+    'sodium_sub' => {
+        added => [1,0,17],
+        ffi => [
+            ['string', 'string', 'size_t'] => 'void',
+            sub {
+                my ($xsub, $bin_string1, $bin_string2, $len) = @_;
+                return unless $bin_string1 && $bin_string2;
+                $len //= length($bin_string1);
+                my $copy = substr($bin_string1, 0);
+                $xsub->($copy, $bin_string2, $len);
+                return $copy;
+            }
+        ],
+        fallback => sub { croak("sodium_sub not implemented until libsodium v1.0.17"); },
+    },
+
     # int
     # sodium_unpad(size_t *unpadded_buflen_p, const unsigned char *buf,
     # size_t padded_buflen, size_t blocksize)
@@ -297,6 +336,22 @@ to assist you in getting your data ready for encryption, decryption, or hashing.
 The L<sodium_add|https://doc.libsodium.org/helpers#adding-large-numbers>
 function adds 2 large numbers.
 
+=head2 sodium_bin2base64
+
+    use Sodium::FFI qw(sodium_bin2base64);
+    say sodium_bin2base64("\377\000"); # /wA=
+    my $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL;
+    say sodium_bin2base64("\377\000", $variant); # /wA=
+    $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
+    say sodium_bin2base64("\377\000", $variant); # /wA
+    $variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE;
+    say sodium_bin2base64("\377\000", $variant); # _wA=
+    $variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+    say sodium_bin2base64("\377\000", $variant); # _wA
+
+The L<sodium_bin2base64|https://doc.libsodium.org/helpers#base64-encoding-decoding>
+function takes a binary string and turns it into a base63 encoded string.
+
 =head2 sodium_bin2hex
 
     use Sodium::FFI qw(sodium_bin2hex);
@@ -370,6 +425,17 @@ The C<sodium_library_version_minor> function returns the minor version of the li
 The L<sodium_pad|https://doc.libsodium.org/padding> function adds
 padding data to a buffer in order to extend its total length to a
 multiple of blocksize.
+
+=head2 sodium_sub
+
+    use Sodium::FFI qw(sodium_sub);
+    my $x = "\x02";
+    my $y = "\x01";
+    my $z = sodium_sub($x, $y);
+    say $x; # \x01
+
+The L<sodium_sub|https://doc.libsodium.org/helpers#subtracting-large-numbers>
+function subtracts 2 large, unsigned numbers encoded in little-endian format.
 
 =head2 sodium_unpad
 

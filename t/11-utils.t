@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use Sodium::FFI qw(
     sodium_add sodium_bin2hex sodium_compare sodium_hex2bin sodium_increment
-    sodium_library_minimal sodium_pad sodium_unpad
+    sodium_library_minimal sodium_pad sodium_sub sodium_unpad sodium_bin2base64
 );
 
 # diag("SIZE_MAX is: " . Sodium::FFI::SIZE_MAX);
@@ -50,6 +50,15 @@ is($readable, 'cafe6942', "hex2bin: maxlen 4, ignore ': ': readable; Cafe : 6942
     is(sodium_increment($foo), "\x02", 'sodium_increment: 01 -> 02');
 }
 
+# sodium_sub
+SKIP: {
+    skip('sodium_sub implemented in libsodium >= v1.0.17', 1) unless Sodium::FFI::_version_or_better(1, 0, 17);
+    my $x = "\x02";
+    my $y = "\x01";
+    my $z = sodium_sub($x, $y);
+    is($z, "\x01", 'sodium_sub: got the right answer');
+};
+
 # sodium_compare
 SKIP: {
     skip('sodium_compare implemented in libsodium >= v1.0.4', 3) unless Sodium::FFI::_version_or_better(1, 0, 4);
@@ -76,5 +85,30 @@ SKIP: {
     skip('sodium_library_minimal implemented in libsodium >= v1.0.12', 1) unless Sodium::FFI::_version_or_better(1, 0, 12);
     is(sodium_library_minimal, Sodium::FFI::SODIUM_LIBRARY_MINIMAL, 'sodium_library_minimal: Got the right answer');
 };
+
+# sodium_bin2base64
+{
+    # no variant defaults to sodium_base64_VARIANT_ORIGINAL
+    is(sodium_bin2base64("\377\000"), '/wA=', 'bin2base64: no variant - \377\000');
+    is(sodium_bin2base64("\000"), 'AA==', 'bin2base64: no variant - \000');
+    is(sodium_bin2base64('aaa'), 'YWFh', 'bin2base64: no variant - aaa');
+    # explicit variant
+    my $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL;
+    is(sodium_bin2base64("\377\000", $variant), '/wA=', 'bin2base64: VARIANT_ORIGINAL - \377\000');
+    is(sodium_bin2base64("\000", $variant), 'AA==', 'bin2base64: VARIANT_ORIGINAL - \000');
+    is(sodium_bin2base64('aaa', $variant), 'YWFh', 'bin2base64: VARIANT_ORIGINAL - aaa');
+    $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
+    is(sodium_bin2base64("\377\000", $variant), '/wA', 'bin2base64: VARIANT_ORIGINAL_NO_PADDING - \377\000');
+    is(sodium_bin2base64("\000", $variant), 'AA', 'bin2base64: VARIANT_ORIGINAL_NO_PADDING - \000');
+    is(sodium_bin2base64('aaa', $variant), 'YWFh', 'bin2base64: VARIANT_ORIGINAL_NO_PADDING - aaa');
+    $variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE;
+    is(sodium_bin2base64("\377\000", $variant), '_wA=', 'bin2base64: VARIANT_URLSAFE - \377\000');
+    is(sodium_bin2base64("\000", $variant), 'AA==', 'bin2base64: VARIANT_ORIGINAL - \000');
+    is(sodium_bin2base64('aaa', $variant), 'YWFh', 'bin2base64: VARIANT_URLSAFE - aaa');
+    $variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+    is(sodium_bin2base64("\377\000", $variant), '_wA', 'bin2base64: VARIANT_URLSAFE_NO_PADDING - \377\000');
+    is(sodium_bin2base64("\000", $variant), 'AA', 'bin2base64: VARIANT_URLSAFE_NO_PADDING - \000');
+    is(sodium_bin2base64('aaa', $variant), 'YWFh', 'bin2base64: VARIANT_URLSAFE_NO_PADDING - aaa');
+}
 
 done_testing;

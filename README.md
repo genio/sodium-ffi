@@ -41,6 +41,24 @@ say $left; # bbb
 The [sodium\_add](https://doc.libsodium.org/helpers#adding-large-numbers)
 function adds 2 large numbers.
 
+## sodium\_bin2base64
+
+```perl
+use Sodium::FFI qw(sodium_bin2base64);
+say sodium_bin2base64("\377\000"); # /wA=
+my $variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL;
+say sodium_bin2base64("\377\000", $variant); # /wA=
+$variant = Sodium::FFI::sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
+say sodium_bin2base64("\377\000", $variant); # /wA
+$variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE;
+say sodium_bin2base64("\377\000", $variant); # _wA=
+$variant = Sodium::FFI::sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+say sodium_bin2base64("\377\000", $variant); # _wA
+```
+
+The [sodium\_bin2base64](https://doc.libsodium.org/helpers#base64-encoding-decoding)
+function takes a binary string and turns it into a base63 encoded string.
+
 ## sodium\_bin2hex
 
 ```perl
@@ -130,6 +148,19 @@ say sodium_pad($bin_string, $block_size); # 01800000
 The [sodium\_pad](https://doc.libsodium.org/padding) function adds
 padding data to a buffer in order to extend its total length to a
 multiple of blocksize.
+
+## sodium\_sub
+
+```perl
+use Sodium::FFI qw(sodium_sub);
+my $x = "\x02";
+my $y = "\x01";
+my $z = sodium_sub($x, $y);
+say $x; # \x01
+```
+
+The [sodium\_sub](https://doc.libsodium.org/helpers#subtracting-large-numbers)
+function subtracts 2 large, unsigned numbers encoded in little-endian format.
 
 ## sodium\_unpad
 
