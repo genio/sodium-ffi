@@ -21,7 +21,7 @@ say Sodium::FFI::unpad($padded);
 [Sodium::FFI](https://metacpan.org/pod/Sodium%3A%3AFFI) is a set of Perl bindings for the [LibSodium](https://doc.libsodium.org/)
 C library. These bindings have been created using FFI via [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus) to make
 building and maintaining the bindings easier than was done via [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium).
-While we also intend to fixup [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
+While we also intend to fix up [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
 of LibSodium, the FFI method is faster to build and release.
 
 # Utility/Helper Functions
@@ -127,6 +127,22 @@ $x = sodium_increment($x); # "\x02";
 The [sodium\_increment](https://doc.libsodium.org/helpers#incrementing-large-numbers)
 function takes an arbitrarily long unsigned number and increments it.
 
+## sodium\_is\_zero
+
+```perl
+use Sodium::FFI qw(sodium_is_zero);
+my $string = "\x00\x00\x01"; # zero zero 1
+# entire string not zeros
+say sodium_is_zero($string); # 0
+# first byte of string is zero
+say sodium_is_zero($string, 1); # 1
+# first two bytes of string is zero
+say sodium_is_zero($string, 2); # 1
+```
+
+The [sodium\_is\_zero](https://doc.libsodium.org/helpers#testing-for-all-zeros)
+function tests a string for all zeros.
+
 ## sodium\_library\_minimal
 
 ```perl
@@ -154,6 +170,24 @@ say sodium_library_version_minor; # 3
 
 The `sodium_library_version_minor` function returns the minor version of the library.
 
+## sodium\_memcmp
+
+```perl
+use Sodium::FFI qw(sodium_memcmp);
+my $string1 = "abcdef";
+my $string2 = "abc";
+my $match_length = 3;
+# string 1 and 2 are equal for the first 3
+say sodium_memcmp($string1, $string2, $match_length); # 0
+# they are not equal for 4 slots
+say sodium_memcmp("abcdef", "abc", 4); # -1
+```
+
+The [sodium\_memcmp](https://doc.libsodium.org/helpers#constant-time-test-for-equality)
+function compares two strings in constant time.
+Results in `-1` when strings 1 and 2 aren't equal.
+Results in `0` when strings 1 and 2 are equal.
+
 ## sodium\_pad
 
 ```perl
@@ -165,7 +199,7 @@ say sodium_pad($bin_string, $block_size); # 01800000
 
 The [sodium\_pad](https://doc.libsodium.org/padding) function adds
 padding data to a buffer in order to extend its total length to a
-multiple of blocksize.
+multiple of the block size.
 
 ## sodium\_sub
 

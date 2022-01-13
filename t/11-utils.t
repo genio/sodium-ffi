@@ -4,7 +4,7 @@ use Test::More;
 use Sodium::FFI qw(
     sodium_add sodium_bin2hex sodium_compare sodium_hex2bin sodium_increment
     sodium_library_minimal sodium_pad sodium_sub sodium_unpad sodium_bin2base64
-    sodium_base642bin
+    sodium_base642bin sodium_memcmp sodium_is_zero
 );
 
 # diag("SIZE_MAX is: " . Sodium::FFI::SIZE_MAX);
@@ -135,6 +135,27 @@ SKIP: {
     is(sodium_base642bin('_wA', $variant), "\377\000", 'base642bin: VARIANT_URLSAFE_NO_PADDING - _wA');
     is(sodium_base642bin('AA', $variant), "\000", 'base642bin: VARIANT_URLSAFE_NO_PADDING - AA');
     is(sodium_base642bin('YWFh', $variant), 'aaa', 'base642bin: VARIANT_URLSAFE_NO_PADDING - YWFh');
+}
+
+# sodium_memcmp
+{
+    is(sodium_memcmp("abc", "abc"), 0, 'memcmp: strings equal');
+    is(sodium_memcmp("abcdefg", "abc", 3), 0, 'memcmp: strings equal for first 3');
+    is(sodium_memcmp("abcdefg", "abc", 4), -1, 'memcmp: strings not equal for first 4');
+}
+
+# sodium_is_zero
+{
+    is(sodium_is_zero("abc"), 0, 'is_zero: not zeros');
+    is(sodium_is_zero(""), 1, 'is_zero: empty string');
+    is(sodium_is_zero("\0"), 1, 'is_zero: null string zero');
+    is(sodium_is_zero("\0\0\0"), 1, 'is_zero: longer null string zero');
+    is(sodium_is_zero("000"), 0, 'is_zero: string of zeros not zero');
+    is(sodium_is_zero("\x00\x00"), 1, 'is_zero: binary string of zeros zero');
+    is(sodium_is_zero("\x00\x01"), 0, 'is_zero: binary string 01 not zero');
+    is(sodium_is_zero("\x00\x01", 1), 1, 'is_zero: binary string 01 checking length 1 zero');
+    is(sodium_is_zero(0), 0, 'is_zero: number zero not zero');
+    is(sodium_is_zero(0, 0), 1, 'is_zero: setting length to check at zero is zero');
 }
 
 done_testing;

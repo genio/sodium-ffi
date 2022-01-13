@@ -152,6 +152,29 @@ our %function = (
         }
     ],
 
+    # int
+    # sodium_is_zero(const unsigned char *n, const size_t nlen)
+    'sodium_is_zero' => [
+        ['string', 'size_t'] => 'int',
+        sub {
+            my ($xsub, $bin_string, $len) = @_;
+            $len //= length($bin_string);
+            return $xsub->($bin_string, $len);
+        }
+    ],
+
+    # int
+    # sodium_memcmp(const void * const b1_, const void * const b2_, size_t len);
+    'sodium_memcmp' => [
+        ['string', 'string', 'size_t'] => 'int',
+        sub {
+            my ($xsub, $string_x, $string_y, $len) = @_;
+            return unless $string_x;
+            $len //= length($string_x);
+            return $xsub->($string_x, $string_y, $len);
+        }
+    ],
+
 );
 
 our %maybe_function = (
@@ -343,7 +366,7 @@ Sodium::FFI - FFI implementation of libsodium
 L<Sodium::FFI> is a set of Perl bindings for the L<LibSodium|https://doc.libsodium.org/>
 C library. These bindings have been created using FFI via L<FFI::Platypus> to make
 building and maintaining the bindings easier than was done via L<Crypt::NaCl::Sodium>.
-While we also intend to fixup L<Crypt::NaCl::Sodium> so that it can use newer versions
+While we also intend to fix up L<Crypt::NaCl::Sodium> so that it can use newer versions
 of LibSodium, the FFI method is faster to build and release.
 
 =head1 Utility/Helper Functions
@@ -435,6 +458,20 @@ function takes a hex string and turns it into a binary string.
 The L<sodium_increment|https://doc.libsodium.org/helpers#incrementing-large-numbers>
 function takes an arbitrarily long unsigned number and increments it.
 
+=head2 sodium_is_zero
+
+    use Sodium::FFI qw(sodium_is_zero);
+    my $string = "\x00\x00\x01"; # zero zero 1
+    # entire string not zeros
+    say sodium_is_zero($string); # 0
+    # first byte of string is zero
+    say sodium_is_zero($string, 1); # 1
+    # first two bytes of string is zero
+    say sodium_is_zero($string, 2); # 1
+
+The L<sodium_is_zero|https://doc.libsodium.org/helpers#testing-for-all-zeros>
+function tests a string for all zeros.
+
 =head2 sodium_library_minimal
 
     use Sodium::FFI qw(sodium_library_minimal);
@@ -456,6 +493,22 @@ The C<sodium_library_version_major> function returns the major version of the li
 
 The C<sodium_library_version_minor> function returns the minor version of the library.
 
+=head2 sodium_memcmp
+
+    use Sodium::FFI qw(sodium_memcmp);
+    my $string1 = "abcdef";
+    my $string2 = "abc";
+    my $match_length = 3;
+    # string 1 and 2 are equal for the first 3
+    say sodium_memcmp($string1, $string2, $match_length); # 0
+    # they are not equal for 4 slots
+    say sodium_memcmp("abcdef", "abc", 4); # -1
+
+The L<sodium_memcmp|https://doc.libsodium.org/helpers#constant-time-test-for-equality>
+function compares two strings in constant time.
+Results in C<-1> when strings 1 and 2 aren't equal.
+Results in C<0> when strings 1 and 2 are equal.
+
 =head2 sodium_pad
 
     use Sodium::FFI qw(sodium_pad);
@@ -465,7 +518,7 @@ The C<sodium_library_version_minor> function returns the minor version of the li
 
 The L<sodium_pad|https://doc.libsodium.org/padding> function adds
 padding data to a buffer in order to extend its total length to a
-multiple of blocksize.
+multiple of the block size.
 
 =head2 sodium_sub
 
