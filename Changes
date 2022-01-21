@@ -1,3 +1,6 @@
 Change history for Sodium-FFI
 
 {{$NEXT}}
+    - Initial release
+    - Helper functions
+    - Randomness generation functions
