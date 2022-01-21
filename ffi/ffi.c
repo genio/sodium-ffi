@@ -15,6 +15,7 @@ ffi_pl_bundle_constant(const char* package, ffi_platypus_constant_t* c)
 {
     _str(SODIUM_VERSION_STRING);
     _uint(SIZE_MAX);
+    _uint(randombytes_SEEDBYTES);
     _sint(SODIUM_LIBRARY_MINIMAL);
     _sint(SODIUM_LIBRARY_VERSION_MAJOR);
     _sint(SODIUM_LIBRARY_VERSION_MINOR);

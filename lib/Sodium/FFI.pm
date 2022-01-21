@@ -13,7 +13,19 @@ use FFI::Platypus;
 use Path::Tiny qw(path);
 use Sub::Util qw(set_subname);
 
-our @EXPORT_OK = qw();
+# these are the methods we can easily attach
+our @EXPORT_OK = qw(
+    randombytes_random randombytes_uniform
+    sodium_version_string sodium_library_version_minor sodium_base64_encoded_len
+);
+
+# add the various C Constants
+push @EXPORT_OK, qw(
+    SODIUM_VERSION_STRING SIZE_MAX randombytes_SEEDBYTES SODIUM_LIBRARY_MINIMAL
+    SODIUM_LIBRARY_VERSION_MAJOR SODIUM_LIBRARY_VERSION_MINOR
+    sodium_base64_VARIANT_ORIGINAL sodium_base64_VARIANT_ORIGINAL_NO_PADDING
+    sodium_base64_VARIANT_URLSAFE sodium_base64_VARIANT_URLSAFE_NO_PADDING
+);
 
 our $ffi;
 BEGIN {
@@ -21,13 +33,28 @@ BEGIN {
     $ffi->bundle();
 }
 # All of these functions don't need to be gated by version.
+$ffi->attach('randombytes_random' => [] => 'uint32');
+$ffi->attach('randombytes_uniform' => ['uint32'] => 'uint32');
 $ffi->attach('sodium_version_string' => [] => 'string');
 $ffi->attach('sodium_library_version_major' => [] => 'int');
 $ffi->attach('sodium_library_version_minor' => [] => 'int');
-
 $ffi->attach('sodium_base64_encoded_len' => ['size_t', 'int'] => 'size_t');
 
 our %function = (
+    # void
+    # randombytes_buf(void * const buf, const size_t size)
+    'randombytes_buf' => [
+        ['string', 'size_t'] => 'void',
+        sub {
+            my ($xsub, $len) = @_;
+            $len //= 0;
+            return '' unless $len > 0;
+            my $buffer = "\0" x ($len + 1);
+            $xsub->($buffer, $len);
+            return substr($buffer, 0, $len);
+        }
+    ],
+
     # void
     # sodium_add(unsigned char *a, const unsigned char *b, const size_t len)
     'sodium_add' => [
@@ -178,6 +205,26 @@ our %function = (
 );
 
 our %maybe_function = (
+    # void
+    # randombytes_buf_deterministic(void * const buf, const size_t size,
+    #   const unsigned char seed[randombytes_SEEDBYTES]);
+    'randombytes_buf_deterministic' => {
+        added => [1,0,12],
+        ffi => [
+            ['string', 'size_t', 'string'] => 'void',
+            sub {
+                my ($xsub, $len, $seed) = @_;
+                $len //= 0;
+                return '' unless $len > 0;
+                my $buffer = "\0" x ($len + 1);
+                $xsub->($buffer, $len, $seed);
+                return substr($buffer, 0, $len);
+            }
+        ],
+        fallback => sub { croak("randombytes_buf_deterministic not implemented until libsodium v1.0.12"); },
+    },
+
+
     # int
     # sodium_compare(const unsigned char *b1_,
     #   const unsigned char *b2_, size_t len)
@@ -368,6 +415,62 @@ C library. These bindings have been created using FFI via L<FFI::Platypus> to ma
 building and maintaining the bindings easier than was done via L<Crypt::NaCl::Sodium>.
 While we also intend to fix up L<Crypt::NaCl::Sodium> so that it can use newer versions
 of LibSodium, the FFI method is faster to build and release.
+
+=head1 Random Number Functions
+
+LibSodium provides a few
+L<Random Number Generator Functions|https://doc.libsodium.org/generating_random_data>
+to assist you in getting your data ready for encryption, decryption, or hashing.
+
+=head2 randombytes_buf
+
+    use Sodium::FFI qw(randombytes_buf);
+    my $bytes = randombytes_buf(2);
+    say $bytes; # contains two bytes of random data
+
+The L<randombytes_buf|https://doc.libsodium.org/generating_random_data#usage>
+function returns string of random bytes limited by a provided length.
+
+=head2 randombytes_buf_deterministic
+
+    use Sodium::FFI qw(randombytes_buf_deterministic);
+    # create some seed string of length Sodium::FFI::randombytes_SEEDBYTES
+    my $seed = 'x' x Sodium::FFI::randombytes_SEEDBYTES;
+    # use that seed to create a random string
+    my $length = 2;
+    my $bytes = randombytes_buf_deterministic($length, $seed);
+    say $bytes; # contains two bytes of random data
+
+The L<randombytes_buf_deterministic|https://doc.libsodium.org/generating_random_data#usage>
+function returns string of random bytes limited by a provided length.
+
+It returns a byte string indistinguishable from random bytes without knowing the C<$seed>.
+For a given seed, this function will always output the same sequence.
+The seed string you create should be C<randombytes_SEEDBYTES> bytes long.
+Up to 256 GB can be produced with a single seed.
+
+=head2 randombytes_random
+
+    use Sodium::FFI qw(randombytes_random);
+    my $random = randombytes_random();
+    say $random;
+
+The L<randombytes_random|https://doc.libsodium.org/generating_random_data#usage>
+function returns an unpredictable value between C<0> and C<0xffffffff> (included).
+
+=head2 randombytes_uniform
+
+    use Sodium::FFI qw(randombytes_uniform);
+    my $upper_limit = 0xffffffff;
+    my $random = randombytes_uniform($upper_limit);
+    say $random;
+
+The L<randombytes_uniform|https://doc.libsodium.org/generating_random_data#usage>
+function returns an unpredictable value between C<0> and C<$upper_bound> (excluded).
+Unlike C<< randombytes_random() % $upper_bound >>, it guarantees a uniform
+distribution of the possible output values even when C<$upper_bound> is not a
+power of C<2>. Note that an C<$upper_bound> less than C<2> leaves only a single element
+to be chosen, namely C<0>.
 
 =head1 Utility/Helper Functions
 

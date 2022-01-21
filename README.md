@@ -24,6 +24,70 @@ building and maintaining the bindings easier than was done via [Crypt::NaCl::Sod
 While we also intend to fix up [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
 of LibSodium, the FFI method is faster to build and release.
 
+# Random Number Functions
+
+LibSodium provides a few
+[Random Number Generator Functions](https://doc.libsodium.org/generating_random_data)
+to assist you in getting your data ready for encryption, decryption, or hashing.
+
+## randombytes\_buf
+
+```perl
+use Sodium::FFI qw(randombytes_buf);
+my $bytes = randombytes_buf(2);
+say $bytes; # contains two bytes of random data
+```
+
+The [randombytes\_buf](https://doc.libsodium.org/generating_random_data#usage)
+function returns string of random bytes limited by a provided length.
+
+## randombytes\_buf\_deterministic
+
+```perl
+use Sodium::FFI qw(randombytes_buf_deterministic);
+# create some seed string of length Sodium::FFI::randombytes_SEEDBYTES
+my $seed = 'x' x Sodium::FFI::randombytes_SEEDBYTES;
+# use that seed to create a random string
+my $length = 2;
+my $bytes = randombytes_buf_deterministic($length, $seed);
+say $bytes; # contains two bytes of random data
+```
+
+The [randombytes\_buf\_deterministic](https://doc.libsodium.org/generating_random_data#usage)
+function returns string of random bytes limited by a provided length.
+
+It returns a byte string indistinguishable from random bytes without knowing the `$seed`.
+For a given seed, this function will always output the same sequence.
+The seed string you create should be `randombytes_SEEDBYTES` bytes long.
+Up to 256 GB can be produced with a single seed.
+
+## randombytes\_random
+
+```perl
+use Sodium::FFI qw(randombytes_random);
+my $random = randombytes_random();
+say $random;
+```
+
+The [randombytes\_random](https://doc.libsodium.org/generating_random_data#usage)
+function returns an unpredictable value between `0` and `0xffffffff` (included).
+
+## randombytes\_uniform
+
+```perl
+use Sodium::FFI qw(randombytes_uniform);
+my $upper_limit = 0xffffffff;
+my $random = randombytes_uniform($upper_limit);
+say $random;
+```
+
+The [randombytes\_uniform](https://doc.libsodium.org/generating_random_data#usage)
+function returns an unpredictable value between `0` and `$upper_bound` (excluded).
+Unlike `randombytes_random() % $upper_bound`, it guarantees a uniform
+distribution of the possible output values even when `$upper_bound` is not a
+power of `2`. Note that an `$upper_bound` less than `2` leaves only a single element
+to be chosen, namely `0`.
+
 # Utility/Helper Functions
 
 LibSodium provides a few [Utility/Helper Functions](https://doc.libsodium.org/helpers)
