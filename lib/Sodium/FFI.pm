@@ -5,7 +5,6 @@ use warnings;
 our $VERSION = '0.003';
 
 use Carp qw(croak);
-use Data::Dumper::Concise qw(Dumper);
 use Exporter qw(import);
 
 use Alien::Sodium;
