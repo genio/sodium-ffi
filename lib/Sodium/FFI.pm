@@ -2,7 +2,7 @@ package Sodium::FFI;
 use strict;
 use warnings;
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 use Carp qw(croak);
 use Exporter qw(import);
