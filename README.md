@@ -106,7 +106,7 @@ function returns `1` if the current CPU supports the AES256-GCM implementation, 
 
 ```perl
 use Sodium::FFI qw(
-    crypto_aead_aes256gcm_keygen
+    crypto_aead_aes256gcm_keygen crypto_aead_aes256gcm_is_available
 );
 if (crypto_aead_aes256gcm_is_available()) {
     my $key = crypto_aead_aes256gcm_keygen();
@@ -192,6 +192,83 @@ my $key = randombytes_buf(crypto_aead_chacha20poly1305_KEYBYTES);
 
 The [crypto\_aead\_chacha20poly1305\_keygen](https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/original_chacha20-poly1305_construction#detached-mode)
 function returns a byte string of `crypto_aead_chacha20poly1305_KEYBYTES` bytes.
+
+# chacha20poly1305\_ietf Crypto Functions
+
+LibSodium provides a few
+[chacha20poly1305 IETF functions](https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction)
+to encrypt or decrypt a message with a nonce and key.
+
+The `IETF` variant of the `ChaCha20-Poly1305` construction can safely encrypt a practically unlimited number of messages,
+but individual messages cannot exceed approximately `256 GiB`.
+
+## crypto\_aead\_chacha20poly1305\_ietf\_decrypt
+
+```perl
+use Sodium::FFI qw(
+    randombytes_buf crypto_aead_chacha20poly1305_ietf_decrypt
+    crypto_aead_chacha20poly1305_ietf_keygen crypto_aead_chacha20poly1305_IETF_NPUBBYTES
+);
+
+# you'd really need to already have the nonce and key, but here
+my $key = crypto_aead_chacha20poly1305_ietf_keygen();
+my $nonce = randombytes_buf(crypto_aead_chacha20poly1305_IETF_NPUBBYTES);
+# your encrypted data would come from a call to crypto_aead_chacha20poly1305_ietf_encrypt
+my $encrypted; # assume this is full of bytes
+# any additional data bytes that were encrypted should also be included
+# they can be undef
+my $additional_data = undef; # we don't care to add anything extra
+# let's decrypt!
+my $decrypted_bytes = crypto_aead_chacha20poly1305_ietf_decrypt(
+    $encrypted, $additional_data, $nonce, $key
+);
+say $decrypted_bytes;
+```
+
+The [crypto\_aead\_chacha20poly1305\_ietf\_decrypt](https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction#combined-mode)
+function returns a string of bytes after verifying that the ciphertext
+includes a valid tag using a secret key, a public nonce, and additional data.
+
+## crypto\_aead\_chacha20poly1305\_ietf\_encrypt
+
+```perl
+use Sodium::FFI qw(
+    randombytes_buf crypto_aead_chacha20poly1305_ietf_encrypt
+    crypto_aead_chacha20poly1305_ietf_keygen crypto_aead_chacha20poly1305_IETF_NPUBBYTES
+);
+# First, let's create a key and nonce
+my $key = crypto_aead_chacha20poly1305_ietf_keygen();
+my $nonce = randombytes_buf(crypto_aead_chacha20poly1305_IETF_NPUBBYTES);
+# let's encrypt 12 bytes of random data... for fun
+my $message = randombytes_buf(12);
+# any additional data bytes that were encrypted should also be included
+# they can be undef
+my $additional_data = undef; # we don't care to add anything extra
+$additional_data = randombytes_buf(12); # or some random byte string
+my $encrypted_bytes = crypto_aead_chacha20poly1305_ietf_encrypt(
+    $message, $additional_data, $nonce, $key
+);
+say $encrypted_bytes;
+```
+
+The [crypto\_aead\_chacha20poly1305\_ietf\_encrypt](https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction#combined-mode)
+function encrypts a message using a secret key and a public nonce and returns that message
+as a string of bytes.
+
+## crypto\_aead\_chacha20poly1305\_ietf\_keygen
+
+```perl
+use Sodium::FFI qw(
+    crypto_aead_chacha20poly1305_ietf_keygen
+);
+my $key = crypto_aead_chacha20poly1305_ietf_keygen();
+# this could also be written:
+use Sodium::FFI qw(randombytes_buf crypto_aead_chacha20poly1305_IETF_KEYBYTES);
+my $key = randombytes_buf(crypto_aead_chacha20poly1305_IETF_KEYBYTES);
+```
+
+The [crypto\_aead\_chacha20poly1305\_ietf\_keygen](https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction#detached-mode)
+function returns a byte string of `crypto_aead_chacha20poly1305_IETF_KEYBYTES` bytes.
 
 # Random Number Functions
 
