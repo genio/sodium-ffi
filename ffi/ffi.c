@@ -39,6 +39,10 @@ ffi_pl_bundle_constant(const char* package, ffi_platypus_constant_t* c)
     _sint(sodium_base64_VARIANT_URLSAFE);
     _sint(sodium_base64_VARIANT_URLSAFE_NO_PADDING);
 
+    /* Crypto Generics */
+    _uint(crypto_auth_BYTES);
+    _uint(crypto_auth_KEYBYTES);
+
     /* AESGCM stuff */
     _sint(HAVE_AESGCM);
     _sint(HAVE_AEAD_DETACHED);

@@ -24,6 +24,59 @@ building and maintaining the bindings easier than was done via [Crypt::NaCl::Sod
 While we also intend to fix up [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
 of LibSodium, the FFI method is faster to build and release.
 
+# Crypto Auth Functions
+
+LibSodium provides a few
+[Crypto Auth Functions](https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication)
+to encrypt and verify messages with a key.
+
+## crypto\_auth
+
+```perl
+use Sodium::FFI qw(randombytes_buf crypto_auth crypto_auth_keygen);
+# First, let's create a key
+my $key = crypto_auth_keygen();
+# let's encrypt 12 bytes of random data... for fun
+my $message = randombytes_buf(12);
+my $encrypted_bytes = crypto_auth($message, $key);
+say $encrypted_bytes;
+```
+
+The [crypto\_auth](https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication#usage)
+function encrypts a message using a secret key and returns that message as a string of bytes.
+
+## crypto\_auth\_verify
+
+```perl
+use Sodium::FFI qw(randombytes_buf crypto_auth_verify crypto_auth_keygen);
+
+my $message = randombytes_buf(12);
+# you'd really need to already have the key, but here
+my $key = crypto_auth_keygen();
+# your encrypted data would come from a call to crypto_auth
+my $encrypted; # assume this is full of bytes
+# let's verify
+my $boolean = crypto_auth_verify($encrypted, $message, $key);
+say $boolean;
+```
+
+The [crypto\_auth\_verify](https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication#usage)
+function returns a boolean letting us know if the encrypted message and the original message are verified with the
+secret key.
+
+## crypto\_auth\_keygen
+
+```perl
+use Sodium::FFI qw(crypto_auth_keygen);
+my $key = crypto_auth_keygen();
+# this could also be written:
+use Sodium::FFI qw(randombytes_buf crypto_auth_KEYBYTES);
+my $key = randombytes_buf(crypto_auth_KEYBYTES);
+```
+
+The [crypto\_auth\_keygen](https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication#usage)
+function returns a byte string of `crypto_auth_KEYBYTES` bytes.
+
 # AES256-GCM Crypto Functions
 
 LibSodium provides a few

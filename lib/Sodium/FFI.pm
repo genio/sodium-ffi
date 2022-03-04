@@ -17,11 +17,12 @@ our @EXPORT_OK = qw(
     randombytes_random randombytes_uniform
     sodium_version_string sodium_library_version_minor sodium_base64_encoded_len
     crypto_aead_aes256gcm_keygen crypto_aead_chacha20poly1305_keygen
-    crypto_aead_chacha20poly1305_ietf_keygen
+    crypto_aead_chacha20poly1305_ietf_keygen crypto_auth_keygen
 );
 
 # add the various C Constants
 push @EXPORT_OK, qw(
+    crypto_auth_BYTES crypto_auth_KEYBYTES
     SODIUM_VERSION_STRING SIZE_MAX randombytes_SEEDBYTES SODIUM_LIBRARY_MINIMAL
     SODIUM_LIBRARY_VERSION_MAJOR SODIUM_LIBRARY_VERSION_MINOR
     sodium_base64_VARIANT_ORIGINAL sodium_base64_VARIANT_ORIGINAL_NO_PADDING
@@ -62,7 +63,59 @@ sub crypto_aead_chacha20poly1305_keygen {
     return Sodium::FFI::randombytes_buf($len);
 }
 
+sub crypto_auth_keygen {
+    my $len = Sodium::FFI::crypto_auth_KEYBYTES;
+    return Sodium::FFI::randombytes_buf($len);
+}
+
 our %function = (
+    # int
+    # crypto_auth(unsigned char *out, const unsigned char *in,
+    #     unsigned long long inlen, const unsigned char *k);
+    'crypto_auth' => [
+        ['string', 'string', 'size_t', 'string'] => 'int',
+        sub {
+            my ($xsub, $msg, $key) = @_;
+            my $msg_len = length($msg);
+            my $key_len = length($key);
+
+            unless($key_len == Sodium::FFI::crypto_auth_KEYBYTES) {
+                croak("Secret key length should be crypto_auth_KEYBYTES bytes");
+            }
+
+            my $mac = "\0" x Sodium::FFI::crypto_auth_BYTES;
+            my $real_len = 0;
+            my $ret = $xsub->($mac, $msg, $msg_len, $key);
+            croak("Internal error") unless $ret == 0;
+            return $mac;
+        }
+    ],
+
+    # int
+    # crypto_auth_verify(const unsigned char *h, const unsigned char *in,
+    #     unsigned long long inlen, const unsigned char *k);
+    'crypto_auth_verify' => [
+        ['string', 'string', 'size_t', 'string'] => 'int',
+        sub {
+            my ($xsub, $mac, $msg, $key) = @_;
+            my $mac_len = length($mac);
+            my $msg_len = length($msg);
+            my $key_len = length($key);
+            my $SIZE_MAX = Sodium::FFI::SIZE_MAX;
+
+            unless ($key_len == Sodium::FFI::crypto_auth_KEYBYTES) {
+                croak("Secret key length should be crypto_auth_KEYBYTES bytes");
+            }
+            unless ($mac_len == Sodium::FFI::crypto_auth_BYTES) {
+                croak("authentication tag length should be crypto_auth_BYTES bytes");
+            }
+
+            my $ret = $xsub->($mac, $msg, $msg_len, $key);
+            return 1 if $ret == 0;
+            return 0;
+        }
+    ],
+
     # int
     # crypto_aead_chacha20poly1305_ietf_decrypt(unsigned char *m,
     #     unsigned long long *mlen_p,
@@ -721,6 +774,53 @@ C library. These bindings have been created using FFI via L<FFI::Platypus> to ma
 building and maintaining the bindings easier than was done via L<Crypt::NaCl::Sodium>.
 While we also intend to fix up L<Crypt::NaCl::Sodium> so that it can use newer versions
 of LibSodium, the FFI method is faster to build and release.
+
+=head1 Crypto Auth Functions
+
+LibSodium provides a few
+L<Crypto Auth Functions|https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication>
+to encrypt and verify messages with a key.
+
+=head2 crypto_auth
+
+    use Sodium::FFI qw(randombytes_buf crypto_auth crypto_auth_keygen);
+    # First, let's create a key
+    my $key = crypto_auth_keygen();
+    # let's encrypt 12 bytes of random data... for fun
+    my $message = randombytes_buf(12);
+    my $encrypted_bytes = crypto_auth($message, $key);
+    say $encrypted_bytes;
+
+The L<crypto_auth|https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication#usage>
+function encrypts a message using a secret key and returns that message as a string of bytes.
+
+=head2 crypto_auth_verify
+
+    use Sodium::FFI qw(randombytes_buf crypto_auth_verify crypto_auth_keygen);
+
+    my $message = randombytes_buf(12);
+    # you'd really need to already have the key, but here
+    my $key = crypto_auth_keygen();
+    # your encrypted data would come from a call to crypto_auth
+    my $encrypted; # assume this is full of bytes
+    # let's verify
+    my $boolean = crypto_auth_verify($encrypted, $message, $key);
+    say $boolean;
+
+The L<crypto_auth_verify|https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication#usage>
+function returns a boolean letting us know if the encrypted message and the original message are verified with the
+secret key.
+
+=head2 crypto_auth_keygen
+
+    use Sodium::FFI qw(crypto_auth_keygen);
+    my $key = crypto_auth_keygen();
+    # this could also be written:
+    use Sodium::FFI qw(randombytes_buf crypto_auth_KEYBYTES);
+    my $key = randombytes_buf(crypto_auth_KEYBYTES);
+
+The L<crypto_auth_keygen|https://doc.libsodium.org/secret-key_cryptography/secret-key_authentication#usage>
+function returns a byte string of C<crypto_auth_KEYBYTES> bytes.
 
 =head1 AES256-GCM Crypto Functions
 
