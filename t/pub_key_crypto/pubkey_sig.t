@@ -7,7 +7,7 @@ use Sodium::FFI qw(
     crypto_sign_keypair crypto_sign_seed_keypair
     randombytes_buf
     crypto_sign crypto_sign_open
-    crypto_sign_detached
+    crypto_sign_detached crypto_sign_verify_detached
 );
 
 ok(crypto_sign_SECRETKEYBYTES, 'crypto_sign_SECRETKEYBYTES: got the constant');
@@ -57,8 +57,8 @@ ok(crypto_sign_SEEDBYTES, 'crypto_sign_SEEDBYTES: got the constant');
     ok($signature, 'crypto_sign_detached: got a result');
     is(length($signature), crypto_sign_BYTES, 'The signature length is correct');
 
-    # my $open = crypto_sign_open($msg_signed, $pub);
-    # is($open, $msg, 'crypto_sign_open: Messages are equal');
+    my $verified = crypto_sign_verify_detached($signature, $msg, $pub);
+    ok($verified, 'crypto_sign_verify_detached: Message verified');
 }
 
 

@@ -525,6 +525,31 @@ our %function = (
         }
     ],
 
+    # int
+    # crypto_sign_verify_detached(const unsigned char *sig,
+    #     const unsigned char *m,
+    #     unsigned long long mlen,
+    #     const unsigned char *pk);
+    'crypto_sign_verify_detached' => [
+        ['string', 'string', 'size_t', 'string'] => 'int',
+        sub {
+            my ($xsub, $sig, $msg, $key) = @_;
+            my $SIZE_MAX = Sodium::FFI::SIZE_MAX;
+            my $sig_len = length($sig);
+            my $msg_len = length($msg);
+            my $key_len = length($key);
+            unless ($sig_len == Sodium::FFI::crypto_sign_BYTES) {
+                croak("Signature length must be crypto_sign_BYTES in length");
+            }
+            unless ($key_len == Sodium::FFI::crypto_sign_PUBLICKEYBYTES) {
+                croak("Public Key length must be crypto_sign_PUBLICKEYBYTES in length");
+            }
+            my $ret = $xsub->($sig, $msg, $msg_len, $key);
+            return 1 if ($ret == 0);
+            return 0;
+        }
+    ],
+
     # void
     # randombytes_buf(void * const buf, const size_t size)
     'randombytes_buf' => [

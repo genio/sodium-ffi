@@ -6,6 +6,7 @@ Change history for Sodium-FFI
     - Added crypto_sign
     - Added crypto_sign_open
     - Added crypto_sign_detached
+    - Added crypto_sign_verify_detached
     - Added constants:
       crypto_sign_PUBLICKEYBYTES,
       crypto_sign_SECRETKEYBYTES,
