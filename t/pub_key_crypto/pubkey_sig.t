@@ -7,6 +7,7 @@ use Sodium::FFI qw(
     crypto_sign_keypair crypto_sign_seed_keypair
     randombytes_buf
     crypto_sign crypto_sign_open
+    crypto_sign_detached
 );
 
 ok(crypto_sign_SECRETKEYBYTES, 'crypto_sign_SECRETKEYBYTES: got the constant');
@@ -14,7 +15,7 @@ ok(crypto_sign_BYTES, 'crypto_sign_BYTES: got the constant');
 ok(crypto_sign_PUBLICKEYBYTES, 'crypto_sign_PUBLICKEYBYTES: got the constant');
 ok(crypto_sign_SEEDBYTES, 'crypto_sign_SEEDBYTES: got the constant');
 
-# no seed
+# combined, no seed
 {
     my ($pub, $priv) = crypto_sign_keypair();
     is(length($pub), crypto_sign_PUBLICKEYBYTES, 'crypto_sign_keypair: pub is right length');
@@ -29,7 +30,7 @@ ok(crypto_sign_SEEDBYTES, 'crypto_sign_SEEDBYTES: got the constant');
     is($open, $msg, 'crypto_sign_open: Messages are equal');
 }
 
-# with seed
+# combined, with seed
 {
     my $seed = randombytes_buf(crypto_sign_SEEDBYTES);
     my ($pub, $priv) = crypto_sign_seed_keypair($seed);
@@ -44,5 +45,21 @@ ok(crypto_sign_SEEDBYTES, 'crypto_sign_SEEDBYTES: got the constant');
     my $open = crypto_sign_open($msg_signed, $pub);
     is($open, $msg, 'crypto_sign_open: Messages are equal');
 }
+
+# detached, no seed
+{
+    my ($pub, $priv) = crypto_sign_keypair();
+    is(length($pub), crypto_sign_PUBLICKEYBYTES, 'crypto_sign_keypair: pub is right length');
+    is(length($priv), crypto_sign_SECRETKEYBYTES, 'crypto_sign_keypair: priv is right length');
+
+    my $msg = "Here is the message, to be signed using a secret key, and to be verified using a public key";
+    my $signature = crypto_sign_detached($msg, $priv);
+    ok($signature, 'crypto_sign_detached: got a result');
+    is(length($signature), crypto_sign_BYTES, 'The signature length is correct');
+
+    # my $open = crypto_sign_open($msg_signed, $pub);
+    # is($open, $msg, 'crypto_sign_open: Messages are equal');
+}
+
 
 done_testing();

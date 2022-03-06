@@ -343,6 +343,18 @@ my $signed_msg = crypto_sign($msg, $secret_key);
 The [crypto\_sign](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode)
 function prepends a signature to an unaltered message.
 
+## crypto\_sign\_detached
+
+```perl
+use Sodium::FFI qw(crypto_sign_keypair crypto_sign_detached);
+my $msg = "Let's sign this and stuff!";
+my ($public_key, $secret_key) = crypto_sign_keypair();
+my $signature = crypto_sign_detached($msg, $secret_key);
+```
+
+The [crypto\_sign\_detached](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#detached-mode)
+function signs the message with the secret key and returns the signature.
+
 ## crypto\_sign\_keypair
 
 ```perl
@@ -364,7 +376,8 @@ my $msg = crypto_sign_open($signed_msg, $public_key);
 ```
 
 The [crypto\_sign\_open](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode)
-function prepends a signature to an unaltered message.
+function checks that a signed message has a valid signature for the public key. If so, it returns that message
+and if not, it will throw.
 
 ## crypto\_sign\_seed\_keypair
 

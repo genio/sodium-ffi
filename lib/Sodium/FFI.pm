@@ -469,6 +469,33 @@ our %function = (
     ],
 
     # int
+    # crypto_sign_detached(unsigned char *sig, unsigned long long *siglen_p,
+    #     const unsigned char *m, unsigned long long mlen,
+    #     const unsigned char *sk);
+    'crypto_sign_detached' => [
+        ['string', 'size_t*', 'string', 'size_t', 'string'] => 'int',
+        sub {
+            my ($xsub, $msg, $key) = @_;
+            my $SIZE_MAX = Sodium::FFI::SIZE_MAX;
+            my $msg_len = length($msg);
+            my $key_len = length($key);
+            unless ($key_len == Sodium::FFI::crypto_sign_SECRETKEYBYTES) {
+                croak("Secret Key length must be crypto_sign_SECRETKEYBYTES in length");
+            }
+            my $signature = "\0" x Sodium::FFI::crypto_sign_BYTES;
+            my $real_len = 0;
+            my $ret = $xsub->($signature, \$real_len, $msg, $msg_len, $key);
+            if ($ret != 0) {
+                croak("Signature creation failed.");
+            }
+            if ($real_len <= 0 || $real_len > Sodium::FFI::crypto_sign_BYTES) {
+                croak("Signature size isn't correct.");
+            }
+            return substr($signature, 0, $real_len);
+        }
+    ],
+
+    # int
     # crypto_sign_open(unsigned char *m, unsigned long long *mlen_p,
     #     const unsigned char *sm, unsigned long long smlen,
     #     const unsigned char *pk);
@@ -1164,6 +1191,16 @@ before messages signed using it can be verified. This is not authenticated encry
 The L<crypto_sign|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode>
 function prepends a signature to an unaltered message.
 
+=head2 crypto_sign_detached
+
+    use Sodium::FFI qw(crypto_sign_keypair crypto_sign_detached);
+    my $msg = "Let's sign this and stuff!";
+    my ($public_key, $secret_key) = crypto_sign_keypair();
+    my $signature = crypto_sign_detached($msg, $secret_key);
+
+The L<crypto_sign_detached|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#detached-mode>
+function signs the message with the secret key and returns the signature.
+
 =head2 crypto_sign_keypair
 
     use Sodium::FFI qw(crypto_sign_keypair);
@@ -1181,7 +1218,8 @@ function randomly generates a secret key and a corresponding public key.
     my $msg = crypto_sign_open($signed_msg, $public_key);
 
 The L<crypto_sign_open|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode>
-function prepends a signature to an unaltered message.
+function checks that a signed message has a valid signature for the public key. If so, it returns that message
+and if not, it will throw.
 
 =head2 crypto_sign_seed_keypair
 
