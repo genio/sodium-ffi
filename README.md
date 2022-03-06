@@ -352,6 +352,18 @@ my ($public_key, $secret_key) = crypto_sign_seed_keypair($seed);
 The [crypto\_sign\_seed\_keypair](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation)
 function randomly generates a secret key deterministically derived from a single key seed and a corresponding public key.
 
+## crypto\_sign
+
+```perl
+use Sodium::FFI qw(crypto_sign_keypair crypto_sign);
+my $msg = "Let's sign this and stuff!";
+my ($public_key, $secret_key) = crypto_sign_keypair();
+my $signed_msg = crypto_sign($msg, $secret_key);
+```
+
+The [crypto\_sign](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode)
+function prepends a signature to an unaltered message.
+
 # Random Number Functions
 
 LibSodium provides a few
