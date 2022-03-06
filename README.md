@@ -323,6 +323,24 @@ my $key = randombytes_buf(crypto_aead_chacha20poly1305_IETF_KEYBYTES);
 The [crypto\_aead\_chacha20poly1305\_ietf\_keygen](https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction#detached-mode)
 function returns a byte string of `crypto_aead_chacha20poly1305_IETF_KEYBYTES` bytes.
 
+# Public Key Cryptography - Public Key Signatures
+
+LibSodium provides a few
+[Public Key Signature Functions](https://doc.libsodium.org/public-key_cryptography/public-key_signatures)
+where a signer generates a key pair (public key and secret key) and appends the secret
+key to any number of messages. The one doing the verification will need to know and trust the public key
+before messages signed using it can be verified. This is not authenticated encryption.
+
+## crypto\_sign\_keypair
+
+```perl
+use Sodium::FFI qw(crypto_sign_keypair);
+my ($public_key, $secret_key) = crypto_sign_keypair();
+```
+
+The [crypto\_sign\_keypair](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation)
+function randomly generates a secret key and a corresponding public key.
+
 # Random Number Functions
 
 LibSodium provides a few

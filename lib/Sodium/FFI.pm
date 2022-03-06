@@ -33,6 +33,7 @@ push @EXPORT_OK, qw(
     crypto_aead_chacha20poly1305_ABYTES
     crypto_aead_chacha20poly1305_IETF_KEYBYTES crypto_aead_chacha20poly1305_IETF_NPUBBYTES
     crypto_aead_chacha20poly1305_IETF_ABYTES
+    crypto_sign_SEEDBYTES crypto_sign_BYTES crypto_sign_SECRETKEYBYTES crypto_sign_PUBLICKEYBYTES
 );
 
 our $ffi;
@@ -397,6 +398,22 @@ our %function = (
                 return $xsub->();
             }
             return 0;
+        }
+    ],
+
+    # int
+    # crypto_sign_keypair(unsigned char *pk, unsigned char *sk);
+    'crypto_sign_keypair' => [
+        ['string', 'string'] => 'int',
+        sub {
+            my ($xsub) = @_;
+            my $pubkey = "\0" x Sodium::FFI::crypto_sign_PUBLICKEYBYTES;
+            my $seckey = "\0" x Sodium::FFI::crypto_sign_SECRETKEYBYTES;
+            my $ret = $xsub->($pubkey, $seckey);
+            if ($ret != 0) {
+                croak("Some internal error happened");
+            }
+            return ($pubkey, $seckey);
         }
     ],
 
@@ -1047,6 +1064,22 @@ as a string of bytes.
 
 The L<crypto_aead_chacha20poly1305_ietf_keygen|https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction#detached-mode>
 function returns a byte string of C<crypto_aead_chacha20poly1305_IETF_KEYBYTES> bytes.
+
+=head1 Public Key Cryptography - Public Key Signatures
+
+LibSodium provides a few
+L<Public Key Signature Functions|https://doc.libsodium.org/public-key_cryptography/public-key_signatures>
+where a signer generates a key pair (public key and secret key) and appends the secret
+key to any number of messages. The one doing the verification will need to know and trust the public key
+before messages signed using it can be verified. This is not authenticated encryption.
+
+=head2 crypto_sign_keypair
+
+    use Sodium::FFI qw(crypto_sign_keypair);
+    my ($public_key, $secret_key) = crypto_sign_keypair();
+
+The L<crypto_sign_keypair|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation>
+function randomly generates a secret key and a corresponding public key.
 
 =head1 Random Number Functions
 
