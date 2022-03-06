@@ -2,6 +2,7 @@ Change history for Sodium-FFI
 
 {{$NEXT}}
     - Added crypto_sign_keypair
+    - Added crypto_sign_seed_keypair
     - Added constants:
       crypto_sign_PUBLICKEYBYTES,
       crypto_sign_SECRETKEYBYTES,

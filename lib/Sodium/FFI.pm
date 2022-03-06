@@ -417,6 +417,26 @@ our %function = (
         }
     ],
 
+    # int
+    # crypto_sign_seed_keypair(unsigned char *pk, unsigned char *sk, const unsigned char *seed);
+    'crypto_sign_seed_keypair' => [
+        ['string', 'string', 'string'] => 'int',
+        sub {
+            my ($xsub, $seed) = @_;
+            my $seed_len = length($seed);
+            unless ($seed_len == Sodium::FFI::crypto_sign_SEEDBYTES) {
+                croak("Seed length must be crypto_sign_SEEDBYTES in length");
+            }
+            my $pubkey = "\0" x Sodium::FFI::crypto_sign_PUBLICKEYBYTES;
+            my $seckey = "\0" x Sodium::FFI::crypto_sign_SECRETKEYBYTES;
+            my $ret = $xsub->($pubkey, $seckey, $seed);
+            if ($ret != 0) {
+                croak("Some internal error happened");
+            }
+            return ($pubkey, $seckey);
+        }
+    ],
+
     # void
     # randombytes_buf(void * const buf, const size_t size)
     'randombytes_buf' => [
@@ -1080,6 +1100,15 @@ before messages signed using it can be verified. This is not authenticated encry
 
 The L<crypto_sign_keypair|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation>
 function randomly generates a secret key and a corresponding public key.
+
+=head2 crypto_sign_seed_keypair
+
+    use Sodium::FFI qw(crypto_sign_seed_keypair crypto_sign_SEEDBYTES randombytes_buf);
+    my $seed = randombytes_buf(crypto_sign_SEEDBYTES);
+    my ($public_key, $secret_key) = crypto_sign_seed_keypair($seed);
+
+The L<crypto_sign_seed_keypair|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation>
+function randomly generates a secret key deterministically derived from a single key seed and a corresponding public key.
 
 =head1 Random Number Functions
 
