@@ -390,6 +390,20 @@ my ($public_key, $secret_key) = crypto_sign_seed_keypair($seed);
 The [crypto\_sign\_seed\_keypair](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation)
 function randomly generates a secret key deterministically derived from a single key seed and a corresponding public key.
 
+## crypto\_sign\_verify\_detached
+
+```perl
+use Sodium::FFI qw(crypto_sign_verify_detached);
+my $signature = ...;
+my $message = ...;
+my $public_key = ...;
+my $boolean = crypto_sign_verify_detached($signature, $message, $public_key);
+```
+
+The [crypto\_sign\_verify\_detached](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#detached-mode)
+function verifies that a signature is valid for the supplied message with public key. It returns
+a boolean value, `1` for true, `0` for false.
+
 # Random Number Functions
 
 LibSodium provides a few
