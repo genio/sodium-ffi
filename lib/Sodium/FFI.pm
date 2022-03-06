@@ -468,6 +468,36 @@ our %function = (
         }
     ],
 
+    # int
+    # crypto_sign_open(unsigned char *m, unsigned long long *mlen_p,
+    #     const unsigned char *sm, unsigned long long smlen,
+    #     const unsigned char *pk);
+    'crypto_sign_open' => [
+        ['string', 'size_t*', 'string', 'size_t', 'string'] => 'int',
+        sub {
+            my ($xsub, $msg, $key) = @_;
+            my $SIZE_MAX = Sodium::FFI::SIZE_MAX;
+            my $msg_len = length($msg);
+            my $key_len = length($key);
+            unless ($key_len == Sodium::FFI::crypto_sign_PUBLICKEYBYTES) {
+                croak("Public Key length must be crypto_sign_PUBLICKEYBYTES in length");
+            }
+            if ($SIZE_MAX - $msg_len <= Sodium::FFI::crypto_sign_BYTES) {
+                croak("Arithmetic overflow");
+            }
+            my $real_len = 0;
+            my $open = "\0" x $msg_len;
+            my $ret = $xsub->($open, \$real_len, $msg, $msg_len, $key);
+            if ($ret != 0) {
+                croak("Some internal error happened");
+            }
+            if ($real_len >= $SIZE_MAX || $real_len > $msg_len) {
+                croak("Arithmetic overflow");
+            }
+            return substr($open, 0, $real_len);
+        }
+    ],
+
     # void
     # randombytes_buf(void * const buf, const size_t size)
     'randombytes_buf' => [
@@ -1124,23 +1154,6 @@ where a signer generates a key pair (public key and secret key) and appends the 
 key to any number of messages. The one doing the verification will need to know and trust the public key
 before messages signed using it can be verified. This is not authenticated encryption.
 
-=head2 crypto_sign_keypair
-
-    use Sodium::FFI qw(crypto_sign_keypair);
-    my ($public_key, $secret_key) = crypto_sign_keypair();
-
-The L<crypto_sign_keypair|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation>
-function randomly generates a secret key and a corresponding public key.
-
-=head2 crypto_sign_seed_keypair
-
-    use Sodium::FFI qw(crypto_sign_seed_keypair crypto_sign_SEEDBYTES randombytes_buf);
-    my $seed = randombytes_buf(crypto_sign_SEEDBYTES);
-    my ($public_key, $secret_key) = crypto_sign_seed_keypair($seed);
-
-The L<crypto_sign_seed_keypair|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation>
-function randomly generates a secret key deterministically derived from a single key seed and a corresponding public key.
-
 =head2 crypto_sign
 
     use Sodium::FFI qw(crypto_sign_keypair crypto_sign);
@@ -1150,6 +1163,34 @@ function randomly generates a secret key deterministically derived from a single
 
 The L<crypto_sign|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode>
 function prepends a signature to an unaltered message.
+
+=head2 crypto_sign_keypair
+
+    use Sodium::FFI qw(crypto_sign_keypair);
+    my ($public_key, $secret_key) = crypto_sign_keypair();
+
+The L<crypto_sign_keypair|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation>
+function randomly generates a secret key and a corresponding public key.
+
+=head2 crypto_sign_open
+
+    use Sodium::FFI qw(crypto_sign_open);
+    # we should have the public key and signed message to open
+    my $signed_msg = ...;
+    my $public_key = ...;
+    my $msg = crypto_sign_open($signed_msg, $public_key);
+
+The L<crypto_sign_open|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode>
+function prepends a signature to an unaltered message.
+
+=head2 crypto_sign_seed_keypair
+
+    use Sodium::FFI qw(crypto_sign_seed_keypair crypto_sign_SEEDBYTES randombytes_buf);
+    my $seed = randombytes_buf(crypto_sign_SEEDBYTES);
+    my ($public_key, $secret_key) = crypto_sign_seed_keypair($seed);
+
+The L<crypto_sign_seed_keypair|https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation>
+function randomly generates a secret key deterministically derived from a single key seed and a corresponding public key.
 
 =head1 Random Number Functions
 

@@ -331,27 +331,6 @@ where a signer generates a key pair (public key and secret key) and appends the 
 key to any number of messages. The one doing the verification will need to know and trust the public key
 before messages signed using it can be verified. This is not authenticated encryption.
 
-## crypto\_sign\_keypair
-
-```perl
-use Sodium::FFI qw(crypto_sign_keypair);
-my ($public_key, $secret_key) = crypto_sign_keypair();
-```
-
-The [crypto\_sign\_keypair](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation)
-function randomly generates a secret key and a corresponding public key.
-
-## crypto\_sign\_seed\_keypair
-
-```perl
-use Sodium::FFI qw(crypto_sign_seed_keypair crypto_sign_SEEDBYTES randombytes_buf);
-my $seed = randombytes_buf(crypto_sign_SEEDBYTES);
-my ($public_key, $secret_key) = crypto_sign_seed_keypair($seed);
-```
-
-The [crypto\_sign\_seed\_keypair](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation)
-function randomly generates a secret key deterministically derived from a single key seed and a corresponding public key.
-
 ## crypto\_sign
 
 ```perl
@@ -363,6 +342,40 @@ my $signed_msg = crypto_sign($msg, $secret_key);
 
 The [crypto\_sign](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode)
 function prepends a signature to an unaltered message.
+
+## crypto\_sign\_keypair
+
+```perl
+use Sodium::FFI qw(crypto_sign_keypair);
+my ($public_key, $secret_key) = crypto_sign_keypair();
+```
+
+The [crypto\_sign\_keypair](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation)
+function randomly generates a secret key and a corresponding public key.
+
+## crypto\_sign\_open
+
+```perl
+use Sodium::FFI qw(crypto_sign_open);
+# we should have the public key and signed message to open
+my $signed_msg = ...;
+my $public_key = ...;
+my $msg = crypto_sign_open($signed_msg, $public_key);
+```
+
+The [crypto\_sign\_open](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#combined-mode)
+function prepends a signature to an unaltered message.
+
+## crypto\_sign\_seed\_keypair
+
+```perl
+use Sodium::FFI qw(crypto_sign_seed_keypair crypto_sign_SEEDBYTES randombytes_buf);
+my $seed = randombytes_buf(crypto_sign_SEEDBYTES);
+my ($public_key, $secret_key) = crypto_sign_seed_keypair($seed);
+```
+
+The [crypto\_sign\_seed\_keypair](https://doc.libsodium.org/public-key_cryptography/public-key_signatures#key-pair-generation)
+function randomly generates a secret key deterministically derived from a single key seed and a corresponding public key.
 
 # Random Number Functions
 
