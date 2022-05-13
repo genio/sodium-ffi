@@ -323,6 +323,79 @@ my $key = randombytes_buf(crypto_aead_chacha20poly1305_IETF_KEYBYTES);
 The [crypto\_aead\_chacha20poly1305\_ietf\_keygen](https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction#detached-mode)
 function returns a byte string of `crypto_aead_chacha20poly1305_IETF_KEYBYTES` bytes.
 
+# Public Key Cryptography - Crypto Boxes
+
+LibSodium provides a few
+[Public Key Authenticated Encryption](https://doc.libsodium.org/public-key_cryptography/authenticated_encryption)
+and
+[Sealed Box Encryption](https://doc.libsodium.org/public-key_cryptography/sealed_boxes)
+functions to allow sending messages using authenticated encryption.
+
+## crypto\_box\_easy
+
+```perl
+use Sodium::FFI qw(crypto_box_keypair crypto_box_easy randombytes_buf crypto_box_NONCEBYTES);
+my $nonce = randombytes_buf(crypto_box_NONCEBYTES);
+my ($public_key, $secret_key) = crypto_box_keypair();
+my $msg = "test";
+my $cipher_text = crypto_box_easy($msg, $nonce, $public_key, $secret_key);
+```
+
+The [crypto\_box\_easy](https://doc.libsodium.org/public-key_cryptography/authenticated_encryption#combined-mode)
+function encrypts a message using the recipient's public key, the sender's secret key, and a nonce.
+
+## crypto\_box\_keypair
+
+```perl
+use Sodium::FFI qw(crypto_box_keypair);
+my ($public_key, $secret_key) = crypto_box_keypair();
+```
+
+The [crypto\_box\_keypair](https://doc.libsodium.org/public-key_cryptography/authenticated_encryption#key-pair-generation)
+function randomly generates a secret key and a corresponding public key.
+
+## crypto\_box\_open\_easy
+
+```perl
+use Sodium::FFI qw(crypto_box_keypair crypto_box_easy crypto_box_open_easy randombytes_buf crypto_box_NONCEBYTES);
+my $nonce = randombytes_buf(crypto_box_NONCEBYTES);
+my ($public_key, $secret_key) = crypto_box_keypair();
+my $msg = "test";
+my $cipher_text = crypto_box_easy($msg, $nonce, $public_key, $secret_key);
+my $decrypted = crypto_box_open_easy($cipher_text, $nonce, $public_key, $secret_key);
+if ($decrypted eq $msg) {
+    say "Yay!";
+}
+```
+
+The [crypto\_box\_open\_easy](https://doc.libsodium.org/public-key_cryptography/authenticated_encryption#combined-mode)
+function decrypts a cipher text produced by [crypto\_box\_easy](https://metacpan.org/pod/crypto_box_easy).
+
+## crypto\_box\_seed\_keypair
+
+```perl
+use Sodium::FFI qw(crypto_box_seed_keypair crypto_sign_SEEDBYTES randombytes_buf);
+my $seed = randombytes_buf(crypto_sign_SEEDBYTES);
+my ($public_key, $secret_key) = crypto_box_seed_keypair($seed);
+```
+
+The [crypto\_box\_seed\_keypair](https://doc.libsodium.org/public-key_cryptography/authenticated_encryption#key-pair-generation)
+function randomly generates a secret key deterministically derived from a single key seed.
+
+## crypto\_scalarmult\_base
+
+```perl
+use Sodium::FFI qw(crypto_box_keypair crypto_scalarmult_base);
+my ($public_key, $secret_key) = crypto_box_keypair();
+my $computed_public = crypto_scalarmult_base($secret_key);
+if ($public_key eq $computed_public) {
+    say "Yay!";
+}
+```
+
+The [crypto\_scalarmult\_base](https://doc.libsodium.org/public-key_cryptography/authenticated_encryption#key-pair-generation)
+function can be used to compute the public key given a secret key previously generated with [crypto\_box\_keypair](https://metacpan.org/pod/crypto_box_keypair).
+
 # Public Key Cryptography - Public Key Signatures
 
 LibSodium provides a few
