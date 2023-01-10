@@ -1,6 +1,6 @@
 # NAME
 
-Sodium::FFI - FFI implementation of libsodium
+Sodium::FFI - Sodium is a modern, easy-to-use software library for encryption, decryption, signatures, password hashing, and more.
 
 # SYNOPSIS
 
@@ -19,10 +19,12 @@ say Sodium::FFI::unpad($padded);
 # DESCRIPTION
 
 [Sodium::FFI](https://metacpan.org/pod/Sodium%3A%3AFFI) is a set of Perl bindings for the [LibSodium](https://doc.libsodium.org/)
-C library. These bindings have been created using FFI via [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus) to make
-building and maintaining the bindings easier than was done via [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium).
-While we also intend to fix up [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
-of LibSodium, the FFI method is faster to build and release.
+C library. Sodium is a modern, easy-to-use software library for encryption, decryption,
+signatures, password hashing, and more. These bindings have been created using FFI
+via [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus).
+
+While we also intend to eventually fix [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
+of LibSodium.
 
 # Crypto Auth Functions
 
