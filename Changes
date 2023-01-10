@@ -1,6 +1,7 @@
 Change history for Sodium-FFI
 
 {{$NEXT}}
+    - Update tagline to say what Sodium is.
 
 0.007     2022-05-14
     - Added crypto_box_easy
