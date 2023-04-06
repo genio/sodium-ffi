@@ -73,7 +73,7 @@ ok(crypto_box_BEFORENMBYTES, 'crypto_box_BEFORENMBYTES: got the constant');
 }
 
 subtest crypto_box_seal => sub {
-	my ($pub, $priv) = crypto_box_keypair();
+    my ($pub, $priv) = crypto_box_keypair();
 
     is(length($pub), crypto_box_PUBLICKEYBYTES, 'crypto_box_keypair: pub is right length');
     is(length($priv), crypto_box_SECRETKEYBYTES, 'crypto_box_keypair: priv is right length');
