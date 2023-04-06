@@ -496,18 +496,20 @@ our %function = (
     'crypto_box_seal' => [
         ['string', 'string', 'size_t', 'string'] => 'int',
         sub {
-            my ( $xsub, $message, $pk ) = @_;
+            my ($xsub, $message, $pk) = @_;
 
             if (length($pk) != Sodium::FFI::crypto_box_PUBLICKEYBYTES) {
-                croak("The public key must be crypto_box_PUBLICKEYBYTES in length");
+                croak(
+                    "The public key must be crypto_box_PUBLICKEYBYTES in length"
+                );
             }
 
             my $message_len = length($message);
 
-            my $cipher_len = Sodium::FFI::crypto_box_SEALBYTES + $message_len;
+            my $cipher_len  = Sodium::FFI::crypto_box_SEALBYTES + $message_len;
             my $cipher_text = "\0" x $cipher_len;
 
-            my $ret = $xsub->( $cipher_text, $message, $message_len, $pk );
+            my $ret = $xsub->($cipher_text, $message, $message_len, $pk);
             if ($ret != 0) {
                 croak("Some internal error happened");
             }
@@ -515,32 +517,36 @@ our %function = (
         }
     ],
 
-
-	# crypto_box_seal_open(unsigned char *m, const unsigned char *c,
+    # crypto_box_seal_open(unsigned char *m, const unsigned char *c,
     #               unsigned long long clen,
     #               const unsigned char *pk, const unsigned char *sk)
     'crypto_box_seal_open' => [
         ['string', 'string', 'size_t', 'string', 'string'] => 'int',
         sub {
-            my ( $xsub, $cipher_text, $pk, $sk ) = @_;
+            my ($xsub, $cipher_text, $pk, $sk) = @_;
 
             if (length($pk) != Sodium::FFI::crypto_box_PUBLICKEYBYTES) {
-                croak("The public key must be crypto_box_PUBLICKEYBYTES in length");
+                croak(
+                    "The public key must be crypto_box_PUBLICKEYBYTES in length"
+                );
             }
             if (length($sk) != Sodium::FFI::crypto_box_SECRETKEYBYTES) {
-                croak("The secret key must be crypto_box_SECRETKEYBYTES in length");
+                croak(
+                    "The secret key must be crypto_box_SECRETKEYBYTES in length"
+                );
             }
 
-			if (length($cipher_text) < crypto_box_SEALBYTES) {
-				return -1;
-			}
+            if (length($cipher_text) < crypto_box_SEALBYTES) {
+                return -1;
+            }
 
-			my $msg = "\0" x ( length($cipher_text) - crypto_box_SEALBYTES );
-			my $ret = $xsub->( $msg, $cipher_text, length($cipher_text), $pk, $sk );
+            my $msg = "\0" x (length($cipher_text) - crypto_box_SEALBYTES);
+            my $ret
+                = $xsub->($msg, $cipher_text, length($cipher_text), $pk, $sk);
             if ($ret != 0) {
                 croak("Some internal error happened");
             }
-			return $msg;
+            return $msg;
         }
     ],
 
