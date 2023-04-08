@@ -1,6 +1,8 @@
 Change history for Sodium-FFI
 
 {{$NEXT}}
+
+0.009     2023-04-07
     - Added crypto_box_seal (Thanks, Brian D Foy)
     - Added crypto_box_seal_open (Thanks, Brian D Foy)
     - Fixed some documentation
