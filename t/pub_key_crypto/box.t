@@ -77,7 +77,6 @@ subtest crypto_box_seal => sub {
     is(length($priv), crypto_box_SECRETKEYBYTES, 'crypto_box_keypair: priv is right length');
 
     my $msg = "Making the hard things possible";
-    my $nonce = randombytes_buf(crypto_box_NONCEBYTES);
 
     # crypto_box_seal
     my $cipher = crypto_box_seal($msg, $pub);

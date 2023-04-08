@@ -1112,7 +1112,7 @@ C library. Sodium is a modern, easy-to-use software library for encryption, decr
 signatures, password hashing, and more. These bindings have been created using FFI
 via L<FFI::Platypus>.
 
-While we also intend to eventually fix L<Crypt::NaCl::Sodium> so that it can use newer versions
+We also intend to eventually fix L<Crypt::NaCl::Sodium> so that it can use newer versions
 of LibSodium.
 
 =head1 Crypto Auth Functions
@@ -1429,6 +1429,33 @@ function randomly generates a secret key and a corresponding public key.
 
 The L<crypto_box_open_easy|https://doc.libsodium.org/public-key_cryptography/authenticated_encryption#combined-mode>
 function decrypts a cipher text produced by L<crypto_box_easy>.
+
+=head2 crypto_box_seal
+
+    use Sodium::FFI qw(crypto_box_keypair crypto_box_seal);
+    my ($public_key, $secret_key) = crypto_box_keypair();
+    my $msg = "test";
+    my $cipher_text = crypto_box_seal($msg, $public_key);
+
+The L<crypto_box_seal|https://doc.libsodium.org/public-key_cryptography/sealed_boxes>
+function encrypts a message for a recipient whose public key is provided. The
+function creates a new key pair for each message and attaches the public key
+to the ciphertext. The secret key is overwritten and is not accessible after
+this function returns.
+
+=head2 crypto_box_seal_open
+
+    use Sodium::FFI qw(crypto_box_keypair crypto_box_seal crypto_box_seal_open);
+    my ($public_key, $secret_key) = crypto_box_keypair();
+    my $msg = "test";
+    my $cipher_text = crypto_box_seal($msg, $public_key);
+    my $decrypted = crypto_box_seal_open($cipher_text, $public_key, $secret_key);
+    if ($decrypted eq $msg) {
+        say "Yay!";
+    }
+
+The L<crypto_box_seal_open|https://doc.libsodium.org/public-key_cryptography/sealed_boxes>
+function decrypts a cipher text produced by L<crypto_box_seal>.
 
 =head2 crypto_box_seed_keypair
 

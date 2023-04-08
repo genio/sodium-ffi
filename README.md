@@ -23,7 +23,7 @@ C library. Sodium is a modern, easy-to-use software library for encryption, decr
 signatures, password hashing, and more. These bindings have been created using FFI
 via [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus).
 
-While we also intend to eventually fix [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
+We also intend to eventually fix [Crypt::NaCl::Sodium](https://metacpan.org/pod/Crypt%3A%3ANaCl%3A%3ASodium) so that it can use newer versions
 of LibSodium.
 
 # Crypto Auth Functions
@@ -372,6 +372,37 @@ if ($decrypted eq $msg) {
 
 The [crypto\_box\_open\_easy](https://doc.libsodium.org/public-key_cryptography/authenticated_encryption#combined-mode)
 function decrypts a cipher text produced by [crypto\_box\_easy](https://metacpan.org/pod/crypto_box_easy).
+
+## crypto\_box\_seal
+
+```perl
+use Sodium::FFI qw(crypto_box_keypair crypto_box_seal);
+my ($public_key, $secret_key) = crypto_box_keypair();
+my $msg = "test";
+my $cipher_text = crypto_box_seal($msg, $public_key);
+```
+
+The [crypto\_box\_seal](https://doc.libsodium.org/public-key_cryptography/sealed_boxes)
+function encrypts a message for a recipient whose public key is provided. The
+function creates a new key pair for each message and attaches the public key
+to the ciphertext. The secret key is overwritten and is not accessible after
+this function returns.
+
+## crypto\_box\_seal\_open
+
+```perl
+use Sodium::FFI qw(crypto_box_keypair crypto_box_seal crypto_box_seal_open);
+my ($public_key, $secret_key) = crypto_box_keypair();
+my $msg = "test";
+my $cipher_text = crypto_box_seal($msg, $public_key);
+my $decrypted = crypto_box_seal_open($cipher_text, $public_key, $secret_key);
+if ($decrypted eq $msg) {
+    say "Yay!";
+}
+```
+
+The [crypto\_box\_seal\_open](https://doc.libsodium.org/public-key_cryptography/sealed_boxes)
+function decrypts a cipher text produced by [crypto\_box\_seal](https://metacpan.org/pod/crypto_box_seal).
 
 ## crypto\_box\_seed\_keypair
 
