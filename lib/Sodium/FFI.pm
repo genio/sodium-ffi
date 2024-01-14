@@ -40,7 +40,7 @@ push @EXPORT_OK, qw(
 
 our $ffi;
 BEGIN {
-    $ffi = FFI::Platypus->new(api => 1, lib => Alien::Sodium->dynamic_libs);
+    $ffi = FFI::Platypus->new(api => 1, lib => (Alien::Sodium->dynamic_libs)[0]);
     $ffi->bundle();
 }
 # All of these functions don't need to be gated by version.
